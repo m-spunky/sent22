@@ -1,10 +1,12 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { Header } from "@/components/layout/Header"
 import { GlobalStoreProvider } from "@/lib/global-store"
 import { cn } from "@/lib/utils"
+
+const SIDEBAR_STORAGE_KEY = "sentinel-sidebar-collapsed"
 
 export default function DashboardLayout({
   children,
@@ -13,17 +15,31 @@ export default function DashboardLayout({
 }) {
   const [collapsed, setCollapsed] = useState(false)
 
+  // Load collapsed state from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY)
+    if (saved !== null) {
+      setCollapsed(saved === "true")
+    }
+  }, [])
+
+  // Persist collapsed state to localStorage
+  const handleCollapsedChange = (value: boolean) => {
+    setCollapsed(value)
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(value))
+  }
+
   return (
     <GlobalStoreProvider>
     <div className="flex h-screen w-screen overflow-hidden" style={{ backgroundColor: "var(--bg-base)", color: "var(--fg)" }}>
       {/* Desktop Sidebar */}
       <div
         className={cn(
-          "hidden lg:block h-full transition-all duration-300 ease-in-out relative z-50",
-          collapsed ? "w-16" : "w-60"
+          "hidden lg:flex h-full transition-all duration-300 ease-in-out relative z-50",
+          collapsed ? "w-[72px]" : "w-60"
         )}
       >
-        <Sidebar collapsed={collapsed} />
+        <Sidebar collapsed={collapsed} onCollapsedChange={handleCollapsedChange} />
       </div>
 
       {/* Content */}
@@ -35,7 +51,7 @@ export default function DashboardLayout({
         {/* Global Toolbar */}
         <Header 
           sidebarCollapsed={collapsed} 
-          setSidebarCollapsed={setCollapsed} 
+          setSidebarCollapsed={handleCollapsedChange} 
         />
         
         {/* Viewport for specific page content */}

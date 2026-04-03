@@ -5,10 +5,18 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   ShieldCheck, LayoutDashboard, Search, Inbox, Globe,
-  History, MessageSquare, ChevronRight, Wifi, WifiOff, Upload
+  History, MessageSquare, ChevronRight, Wifi, WifiOff, Upload,
+  PanelLeftClose, PanelLeftOpen
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Button } from "@/components/ui/button"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -20,7 +28,12 @@ const navItems = [
   { href: "/dashboard/chat", label: "SentinelChat", icon: MessageSquare, badge: "AI", badgeColor: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
 ]
 
-export function Sidebar({ collapsed }: { collapsed?: boolean }) {
+interface SidebarProps {
+  collapsed?: boolean
+  onCollapsedChange?: (collapsed: boolean) => void
+}
+
+export function Sidebar({ collapsed = false, onCollapsedChange }: SidebarProps) {
   const pathname = usePathname()
   const [gmailConnected, setGmailConnected] = useState(false)
   const [backendOnline, setBackendOnline] = useState(false)
@@ -32,83 +45,215 @@ export function Sidebar({ collapsed }: { collapsed?: boolean }) {
       .catch(() => setBackendOnline(false))
   }, [])
 
+  const toggleCollapse = () => {
+    onCollapsedChange?.(!collapsed)
+  }
+
   return (
-    <aside className="h-full w-64 sidebar-bg flex flex-col">
-      {/* Logo */}
-      <Link href="/" className="flex items-center gap-3 px-5 py-5 border-b border-white/5 group">
-        <div className="h-9 w-9 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-          <ShieldCheck className="h-5 w-5 text-blue-400" />
+    <TooltipProvider delayDuration={0}>
+      <aside 
+        className={cn(
+          "h-full sidebar-bg flex flex-col transition-all duration-300 ease-in-out",
+          collapsed ? "w-[72px]" : "w-60"
+        )}
+      >
+        {/* Logo + Collapse Button */}
+        <div className="flex items-center justify-between px-3 py-4 border-b border-white/5">
+          <Link href="/" className={cn(
+            "flex items-center gap-3 group",
+            collapsed && "justify-center w-full"
+          )}>
+            <div className="h-9 w-9 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.3)] flex-shrink-0">
+              <ShieldCheck className="h-5 w-5 text-blue-400" />
+            </div>
+            {!collapsed && (
+              <div className="flex flex-col leading-none overflow-hidden">
+                <span className="text-sm font-black tracking-tighter text-foreground uppercase">SentinelAI</span>
+                <span className="text-[8px] text-blue-400/80 font-black tracking-[0.3em] uppercase mt-0.5">Fusion v3.0</span>
+              </div>
+            )}
+          </Link>
+          
+          {/* Collapse button - only show if onCollapsedChange is provided (desktop) */}
+          {onCollapsedChange && !collapsed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleCollapse}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-lg transition-all flex-shrink-0"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </Button>
+          )}
         </div>
-        <div className="flex flex-col leading-none">
-          <span className="text-sm font-black tracking-tighter text-foreground uppercase">SentinelAI</span>
-          <span className="text-[8px] text-blue-400/80 font-black tracking-[0.3em] uppercase mt-0.5">Fusion v3.0</span>
-        </div>
-      </Link>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
-        <div className="mb-3 px-2">
-          <p className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-600">Detection Suite</p>
-        </div>
+        {/* Expand button when collapsed */}
+        {onCollapsedChange && collapsed && (
+          <div className="px-3 py-2 border-b border-white/5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleCollapse}
+                  className="h-10 w-10 mx-auto text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-lg transition-all flex"
+                >
+                  <PanelLeftOpen className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Expand sidebar</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
 
-        {navItems.map((item) => {
-          const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
-          const Icon = item.icon
-          return (
-            <Link key={item.href} href={item.href}>
+        {/* Nav */}
+        <nav className={cn(
+          "flex-1 overflow-y-auto py-4 space-y-0.5",
+          collapsed ? "px-2" : "px-3"
+        )}>
+          {!collapsed && (
+            <div className="mb-3 px-2">
+              <p className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-600">Detection Suite</p>
+            </div>
+          )}
+
+          {navItems.map((item) => {
+            const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+            const Icon = item.icon
+            
+            const navContent = (
               <div className={cn(
-                "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 cursor-pointer",
+                "group relative flex items-center gap-3 rounded-xl transition-all duration-200 cursor-pointer",
+                collapsed ? "justify-center px-0 py-2.5" : "px-3 py-2.5",
                 isActive
                   ? "bg-blue-500/10 text-blue-400"
                   : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
               )}>
-                {isActive && (
+                {isActive && !collapsed && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-blue-400 rounded-r-full shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
                 )}
-                <Icon className={cn("h-4 w-4 flex-shrink-0 transition-colors", isActive ? "text-blue-400" : "text-slate-600 group-hover:text-slate-400")} />
-                <span className="text-[11px] font-bold uppercase tracking-wider flex-1">{item.label}</span>
-                {item.badge && (
-                  <span className={cn("text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border", item.badgeColor || "bg-blue-500/10 text-blue-400 border-blue-500/20")}>
-                    {item.badge}
-                  </span>
+                {isActive && collapsed && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-blue-400 rounded-r-full shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
                 )}
-                {!item.badge && isActive && <ChevronRight className="h-3 w-3 opacity-40" />}
-                {item.href === "/dashboard/inbox" && (
-                  <div className={cn("h-1.5 w-1.5 rounded-full", gmailConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-700")} />
+                <Icon className={cn(
+                  "h-4 w-4 flex-shrink-0 transition-colors",
+                  isActive ? "text-blue-400" : "text-slate-600 group-hover:text-slate-400"
+                )} />
+                {!collapsed && (
+                  <>
+                    <span className="text-[11px] font-bold uppercase tracking-wider flex-1">{item.label}</span>
+                    {item.badge && (
+                      <span className={cn("text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border", item.badgeColor || "bg-blue-500/10 text-blue-400 border-blue-500/20")}>
+                        {item.badge}
+                      </span>
+                    )}
+                    {!item.badge && isActive && <ChevronRight className="h-3 w-3 opacity-40" />}
+                    {item.href === "/dashboard/inbox" && (
+                      <div className={cn("h-1.5 w-1.5 rounded-full", gmailConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-700")} />
+                    )}
+                  </>
+                )}
+                {collapsed && item.href === "/dashboard/inbox" && (
+                  <div className={cn("absolute top-1 right-1 h-1.5 w-1.5 rounded-full", gmailConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-700")} />
                 )}
               </div>
-            </Link>
-          )
-        })}
-      </nav>
+            )
 
-      {/* Bottom Status */}
-      <div className="px-4 py-4 border-t border-white/5 space-y-2.5">
-        <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest">
-          <span className="text-slate-600">Backend API</span>
-          <div className="flex items-center gap-1.5">
-            {backendOnline
-              ? <><Wifi className="h-3 w-3 text-emerald-400" /><span className="text-emerald-400">Online</span></>
-              : <><WifiOff className="h-3 w-3 text-red-400" /><span className="text-red-400">Offline</span></>
+            if (collapsed) {
+              return (
+                <Tooltip key={item.href}>
+                  <TooltipTrigger asChild>
+                    <Link href={item.href}>
+                      {navContent}
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="flex items-center gap-2">
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className={cn("text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border", item.badgeColor || "bg-blue-500/10 text-blue-400 border-blue-500/20")}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              )
             }
-          </div>
+
+            return (
+              <Link key={item.href} href={item.href}>
+                {navContent}
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Bottom Status */}
+        <div className={cn(
+          "border-t border-white/5",
+          collapsed ? "px-2 py-3" : "px-4 py-4"
+        )}>
+          {!collapsed ? (
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest">
+                <span className="text-slate-600">Backend API</span>
+                <div className="flex items-center gap-1.5">
+                  {backendOnline
+                    ? <><Wifi className="h-3 w-3 text-emerald-400" /><span className="text-emerald-400">Online</span></>
+                    : <><WifiOff className="h-3 w-3 text-red-400" /><span className="text-red-400">Offline</span></>
+                  }
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest">
+                <span className="text-slate-600">Gmail</span>
+                <div className="flex items-center gap-1.5">
+                  <div className={cn("h-1.5 w-1.5 rounded-full", gmailConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-700")} />
+                  <span className={gmailConnected ? "text-emerald-400" : "text-slate-600"}>{gmailConnected ? "Connected" : "Not linked"}</span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-white/5 flex items-center gap-2.5">
+                <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500/30 to-purple-500/30 border border-blue-500/20 flex items-center justify-center text-[10px] font-black text-blue-300">S</div>
+                <div className="flex flex-col leading-none flex-1">
+                  <span className="text-[10px] font-bold text-slate-300">SOC Analyst</span>
+                  <span className="text-[8px] text-slate-600 uppercase tracking-widest">PS-01 Mode</span>
+                </div>
+                <ThemeToggle />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              {/* Collapsed status indicators */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center cursor-default">
+                    {backendOnline
+                      ? <Wifi className="h-3.5 w-3.5 text-emerald-400" />
+                      : <WifiOff className="h-3.5 w-3.5 text-red-400" />
+                    }
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Backend: {backendOnline ? "Online" : "Offline"}</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500/30 to-purple-500/30 border border-blue-500/20 flex items-center justify-center text-[10px] font-black text-blue-300 cursor-default">
+                    S
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>SOC Analyst · PS-01 Mode</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <ThemeToggle />
+            </div>
+          )}
         </div>
-        <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest">
-          <span className="text-slate-600">Gmail</span>
-          <div className="flex items-center gap-1.5">
-            <div className={cn("h-1.5 w-1.5 rounded-full", gmailConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-700")} />
-            <span className={gmailConnected ? "text-emerald-400" : "text-slate-600"}>{gmailConnected ? "Connected" : "Not linked"}</span>
-          </div>
-        </div>
-        <div className="pt-2 border-t border-white/5 flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500/30 to-purple-500/30 border border-blue-500/20 flex items-center justify-center text-[10px] font-black text-blue-300">S</div>
-          <div className="flex flex-col leading-none flex-1">
-            <span className="text-[10px] font-bold text-slate-300">SOC Analyst</span>
-            <span className="text-[8px] text-slate-600 uppercase tracking-widest">PS-01 Mode</span>
-          </div>
-          <ThemeToggle />
-        </div>
-      </div>
-    </aside>
+      </aside>
+    </TooltipProvider>
   )
 }
