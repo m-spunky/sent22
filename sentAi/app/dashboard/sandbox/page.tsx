@@ -53,7 +53,7 @@ export default function SandboxPage() {
       const resp = await fetch("/api/v1/sandbox/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim(), depth: "standard" }),
+        body: JSON.stringify({ url: url.trim(), depth: "deep" }),
       })
       if (!resp.ok) throw new Error(`Error ${resp.status}`)
       const data = await resp.json()

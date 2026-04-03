@@ -1,78 +1,5 @@
 [
   {
-    "event_id": "evt_bbdadecf",
-    "timestamp": "2026-03-30T00:24:19.797364Z",
-    "input_type": "email",
-    "input_preview": "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-    "verdict": "SUSPICIOUS",
-    "threat_score": 0.527,
-    "confidence": 0.753,
-    "inference_time_ms": 8193,
-    "brand_impersonated": "Unknown",
-    "threat_actor": "Unknown",
-    "urls_analyzed": [
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-      "http://www.desjardins.com/fr/votre_caisse/index.jsp",
-      "http://www.philsfeatheredfriends.com/sec/accesdesjardins/auportADPortail/ObtenirPageAccueil.doorigine_or/",
-      "https://accesd.desjardins.com/",
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif"
-    ],
-    "tactics": [
-      "Spoofing",
-      "Authority Impersonation",
-      "Suspicious Link"
-    ],
-    "feedback": null
-  },
-  {
-    "event_id": "evt_9693940a",
-    "timestamp": "2026-03-30T00:24:28.232058Z",
-    "input_type": "email",
-    "input_preview": "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-    "verdict": "SUSPICIOUS",
-    "threat_score": 0.5269,
-    "confidence": 0.7529,
-    "inference_time_ms": 8086,
-    "brand_impersonated": "Unknown",
-    "threat_actor": "Unknown",
-    "urls_analyzed": [
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-      "http://www.desjardins.com/fr/votre_caisse/index.jsp",
-      "http://www.philsfeatheredfriends.com/sec/accesdesjardins/auportADPortail/ObtenirPageAccueil.doorigine_or/",
-      "https://accesd.desjardins.com/",
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif"
-    ],
-    "tactics": [
-      "Spoofing",
-      "Authority Impersonation"
-    ],
-    "feedback": null
-  },
-  {
-    "event_id": "evt_a4ad372e",
-    "timestamp": "2026-03-30T00:24:35.953818Z",
-    "input_type": "email",
-    "input_preview": "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-    "verdict": "SUSPICIOUS",
-    "threat_score": 0.5269,
-    "confidence": 0.7529,
-    "inference_time_ms": 7336,
-    "brand_impersonated": "Unknown",
-    "threat_actor": "Unknown",
-    "urls_analyzed": [
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-      "http://www.desjardins.com/fr/votre_caisse/index.jsp",
-      "http://www.philsfeatheredfriends.com/sec/accesdesjardins/auportADPortail/ObtenirPageAccueil.doorigine_or/",
-      "https://accesd.desjardins.com/",
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif"
-    ],
-    "tactics": [
-      "Spoofing",
-      "Authority Impersonation"
-    ],
-    "feedback": null
-  },
-  {
     "event_id": "evt_f9977dc7",
     "timestamp": "2026-03-30T00:24:46.149882Z",
     "input_type": "email",
@@ -23948,6 +23875,63 @@
       "Suspicious Link"
     ],
     "ai_generated_probability": 0.2863,
+    "feedback": null
+  },
+  {
+    "event_id": "evt_fe26e117",
+    "timestamp": "2026-04-03T21:38:05.059012Z",
+    "input_type": "email",
+    "input_preview": "From: [NAME] <[EMAIL]>\nSubject: 134536 is your verification code\n\n134536 is your",
+    "verdict": "CRITICAL",
+    "threat_score": 0.9209,
+    "confidence": 0.942,
+    "inference_time_ms": 10847,
+    "brand_impersonated": "Unknown",
+    "threat_actor": "Unknown",
+    "urls_analyzed": [],
+    "tactics": [
+      "Urgency",
+      "Suspicious Link",
+      "Spoofing"
+    ],
+    "ai_generated_probability": 0.7572,
+    "feedback": null
+  },
+  {
+    "event_id": "evt_2f6898fb",
+    "timestamp": "2026-04-03T21:38:10.122937Z",
+    "input_type": "email",
+    "input_preview": "From: [NAME] <[EMAIL]>\nSubject: April Picks: Hackathons You Shouldn't Miss\n\nHey ",
+    "verdict": "SAFE",
+    "threat_score": 0.172,
+    "confidence": 0.5826,
+    "inference_time_ms": 15911,
+    "brand_impersonated": "Unknown",
+    "threat_actor": "Unknown",
+    "urls_analyzed": [],
+    "tactics": [
+      "Suspicious Link"
+    ],
+    "ai_generated_probability": 0.6447,
+    "feedback": null
+  },
+  {
+    "event_id": "evt_76c3ec36",
+    "timestamp": "2026-04-03T21:38:12.065574Z",
+    "input_type": "email",
+    "input_preview": "From: [NAME] <[EMAIL]>\nSubject: Activity on followed Discussion - \"\ud83c\udfa5 Cody World ",
+    "verdict": "CRITICAL",
+    "threat_score": 0.9562,
+    "confidence": 0.959,
+    "inference_time_ms": 17855,
+    "brand_impersonated": "Unknown",
+    "threat_actor": "Unknown",
+    "urls_analyzed": [],
+    "tactics": [
+      "Suspicious Link",
+      "Reward Framing"
+    ],
+    "ai_generated_probability": 0.6913,
     "feedback": null
   }
 ]

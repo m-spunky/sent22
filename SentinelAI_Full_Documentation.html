@@ -1,0 +1,1549 @@
+<!DOCTYPE html><html><head>
+      <title>SentinelAI_Full_Documentation</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <link rel="stylesheet" href="file:///c:\Users\Phoenix\.antigravity\extensions\shd101wyy.markdown-preview-enhanced-0.8.22-universal\crossnote\dependencies\katex\katex.min.css">
+      
+      
+      
+      
+      
+      <style>
+      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+      </style>
+      <script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // your code here
+  });
+</script>
+    </head>
+    <body for="html-export">
+      <div class="crossnote markdown-preview  ">
+      
+<h1 id="sentinelai-fusion--comprehensive-technical-documentation">SentinelAI Fusion — Comprehensive Technical Documentation </h1>
+<blockquote>
+<p><strong>Project:</strong> SentinelAI Fusion<br>
+<strong>Stack:</strong> Next.js 14 (frontend) · FastAPI + Python 3.12 (backend)<br>
+<strong>Version:</strong> 3.0.0<br>
+<strong>Primary PS:</strong> PS-01 (AI-Powered Phishing Detection)<br>
+<strong>Bonus Coverage:</strong> PS-02 (Bot/Credential Stuffing) · PS-03 (Fraud Correlation) · PS-04 (Security Chatbot) · PS-05 (Dark Web Monitoring)</p>
+</blockquote>
+<hr>
+<h2 id="1-problem-description">1. Problem Description </h2>
+<p>Phishing attacks are the <strong>#1 initial access vector</strong> in cyber breaches globally, responsible for over 36% of all confirmed incidents. Despite decades of rule-based email filters, attackers have evolved along three critical axes:</p>
+<ol>
+<li><strong>AI-crafted lures</strong> — LLMs (GPT-4, Claude, Gemini) now produce grammatically flawless, contextually aware phishing emails that bypass keyword and pattern-based detectors entirely.</li>
+<li><strong>QR code phishing ("Quishing")</strong> — Attackers embed malicious URLs inside QR codes so the raw link is never visible in the email body, making it invisible to standard URL scanners.</li>
+<li><strong>Multi-vector kill chains</strong> — A modern attack is a chain: phishing email → credential-harvesting clone page → account takeover → financial fraud within 2–72 hours.</li>
+</ol>
+<h3 id="11-pain-points-addressed">1.1 Pain Points Addressed </h3>
+<table>
+<thead>
+<tr>
+<th>Pain Point</th>
+<th>Why Existing Tools Fail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Single-layer detection</td>
+<td>Most tools check only content OR URL — never both simultaneously with cross-correlation</td>
+</tr>
+<tr>
+<td>No explainability</td>
+<td>SOC analysts get a verdict with zero reasoning — "black box" decisions erode trust and slow triage</td>
+</tr>
+<tr>
+<td>Static rule sets</td>
+<td>Attackers iterate faster than signature update cycles can keep up</td>
+</tr>
+<tr>
+<td>No kill-chain awareness</td>
+<td>Detecting the phishing email doesn't model the downstream fraud it enables</td>
+</tr>
+<tr>
+<td>AI-generated lure blindness</td>
+<td>Templates trained on historical phishing fail when emails are GPT-authored</td>
+</tr>
+<tr>
+<td>No visual brand detection</td>
+<td>Pixel-perfect clones of PayPal or Microsoft portals are invisible to text analysis</td>
+</tr>
+<tr>
+<td>Siloed inboxes</td>
+<td>Security teams cannot retrospectively scan actual Gmail inboxes at scale</td>
+</tr>
+<tr>
+<td>QR blind spot</td>
+<td>No mainstream product covers QR-embedded malicious URLs</td>
+</tr>
+<tr>
+<td>No threat actor attribution</td>
+<td>Verdicts lack intelligence about which APT group is behind the campaign</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-key-solution-pillars">2. Key Solution Pillars </h2>
+<table>
+<thead>
+<tr>
+<th>Pillar</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>5-Layer Parallel AI Fusion</strong></td>
+<td>NLP (GPT + BERT) · URL (XGBoost + rules) · Visual (CLIP + Apify) · Header (SPF/DKIM/DMARC) · Threat Intel</td>
+</tr>
+<tr>
+<td><strong>Explainable AI (XAI)</strong></td>
+<td>SHAP-style attribution, MITRE ATT&amp;CK tactic tagging, full transparency panel</td>
+</tr>
+<tr>
+<td><strong>LLM Authorship Detection</strong></td>
+<td>Stylometric analysis + BERT perplexity proxy + Gemma-3 meta-analysis</td>
+</tr>
+<tr>
+<td><strong>Visual Brand Similarity</strong></td>
+<td>Apify Playwright screenshot → CLIP embedding → cosine similarity vs 18 brand profiles</td>
+</tr>
+<tr>
+<td><strong>Threat Knowledge Graph</strong></td>
+<td>NetworkX graph of 5 APT actors, 50 campaigns, 200+ domains, 100+ IPs</td>
+</tr>
+<tr>
+<td><strong>Kill Chain Modeling</strong></td>
+<td>Maps detection to PS-01→PS-02→PS-03 progression with financial impact estimate</td>
+</tr>
+<tr>
+<td><strong>Gmail Integration</strong></td>
+<td>Full OAuth2 flow, batch inbox scanning, PII redaction before LLM processing</td>
+</tr>
+<tr>
+<td><strong>QR Quishing Module</strong></td>
+<td>pyzbar/OpenCV decode → full 5-layer analysis of embedded URL</td>
+</tr>
+<tr>
+<td><strong>XGBoost Meta-Classifier</strong></td>
+<td>Trained on 6,700 TREC-2007 emails, 125 features — calibrates the entire ensemble output</td>
+</tr>
+<tr>
+<td><strong>Real-time WebSocket Feed</strong></td>
+<td>Per-layer pipeline progress streamed live to the UI during analysis</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3-project-structure">3. Project Structure </h2>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>sent2/
+├── backend/                        # FastAPI Python backend (port 8001)
+│   ├── main.py                     # App factory, router mounting, lifespan hooks
+│   ├── config.py                   # API keys, feature flags, model IDs
+│   ├── models/                     # Detection &amp; ML models
+│   │   ├── nlp_engine.py           # GPT-4o-mini + BERT phishing NLP ensemble
+│   │   ├── url_analyzer.py         # 150+ feature URL risk scorer (WHOIS+DNS+URLhaus)
+│   │   ├── visual_engine.py        # Apify screenshot + Replicate CLIP brand detection
+│   │   ├── header_analyzer.py      # SPF/DKIM/DMARC + routing forensics
+│   │   ├── fusion_engine.py        # Attention-weighted ensemble fusion
+│   │   ├── bert_phishing_model.py  # Fine-tuned BERT on ISCX-2016 dataset
+│   │   ├── ml_url_classifier.py    # XGBoost URL classifier (31 features)
+│   │   ├── sentinel_fusion_model.py# Meta-classifier XGBoost (125 features, TREC-2007)
+│   │   ├── llm_detector.py         # AI authorship fingerprinting (3-pronged)
+│   │   ├── attachment_analyzer.py  # File content inspection + execution trace
+│   │   ├── campaign_clustering.py  # Unsupervised IOC campaign grouping
+│   │   ├── first_contact.py        # Sender domain novelty / zero-day infra tracking
+│   │   └── pii_redactor.py         # PII stripping before LLM API calls
+│   ├── engines/
+│   │   ├── kill_chain.py           # PS-01→PS-03 attack stage progression
+│   │   └── credential_check.py     # HaveIBeenPwned dark web exposure (PS-05)
+│   ├── intelligence/
+│   │   ├── knowledge_graph.py      # NetworkX threat graph (actors/campaigns/IOCs)
+│   │   ├── feed_ingester.py        # ThreatFox + URLhaus + PhishTank live feeds
+│   │   └── ioc_feeds.py            # IOC enrichment from OSINT feeds
+│   ├── behavioral/
+│   │   ├── bot_detector.py         # PS-02 behavioral anomaly detection
+│   │   └── fraud_correlator.py     # PS-03 fraud pattern correlation
+│   ├── chat/
+│   │   ├── rag_pipeline.py         # ChromaDB vector store + RAG
+│   │   └── sentinel_chat.py        # Security chatbot + explanation generator
+│   └── routers/                    # FastAPI endpoint handlers
+│       ├── analyze.py              # Core 5-layer pipeline orchestrator (917 lines)
+│       ├── sandbox.py              # Deep URL sandbox (redirects/SSL/DOM/screenshot)
+│       ├── gmail.py                # Gmail OAuth2 + batch inbox analysis (764 lines)
+│       ├── quishing.py             # QR code phishing detection
+│       ├── bulk.py                 # CSV batch analysis
+│       ├── dashboard.py            # KPI metrics, live feed, timeline
+│       ├── campaigns.py            # Campaign + actor intelligence endpoints
+│       ├── history.py              # Analysis history &amp; trend stats
+│       ├── reports.py              # PDF/JSON report generation
+│       ├── stream.py               # WebSocket broadcast hub
+│       ├── deep_dive.py            # Extended deep analysis endpoint
+│       ├── behavioral.py           # Bot/credential-stuffing endpoints
+│       ├── intelligence.py         # Knowledge graph explorer API
+│       ├── feedback.py             # Analyst feedback collection
+│       └── chat.py                 # SentinelChat conversational API
+│
+└── sentAi/                         # Next.js 14 frontend (port 3000)
+    ├── app/
+    │   ├── page.tsx                # Landing/marketing page
+    │   └── dashboard/
+    │       ├── layout.tsx          # Sidebar shell + theme
+    │       ├── page.tsx            # Dashboard overview (KPIs, charts, feed)
+    │       ├── analyze/page.tsx    # Main analysis interface
+    │       ├── inbox/page.tsx      # Gmail inbox viewer
+    │       ├── sandbox/page.tsx    # URL sandbox UI
+    │       ├── bulk/page.tsx       # CSV bulk upload UI
+    │       ├── campaigns/page.tsx  # Campaign intelligence explorer
+    │       ├── chat/page.tsx       # SentinelChat AI assistant
+    │       ├── history/page.tsx    # Past analysis records
+    │       └── intelligence/page.tsx # Knowledge graph D3 explorer
+    └── components/
+        ├── analyze/                # 18 modular analysis result components
+        ├── dashboard/              # KpiCard, RiskDonut, ThreatChart, ThreatFeed, ThreatTimeline
+        ├── layout/                 # Sidebar, ThemeToggle
+        └── ui/                    # shadcn/ui primitives (Button, Card, Badge, etc.)
+</code></pre><hr>
+<h2 id="4-application-startup--mainpy">4. Application Startup — <code>main.py</code> </h2>
+<p>FastAPI uses an <strong>async lifespan context manager</strong> to pre-warm all expensive components before the first HTTP request arrives. On startup:</p>
+<ol>
+<li>
+<p><strong>Knowledge Graph init</strong> — <code>ThreatKnowledgeGraph()</code> is constructed: 5 actor nodes, 50 campaign nodes, 200+ domain nodes, 100+ IP nodes, 20 MITRE technique nodes are loaded into a NetworkX directed graph. Edge relationships (<code>CONDUCTS</code>, <code>USES_DOMAIN</code>, <code>CONTROLS</code>, <code>EMPLOYS</code>) are added. Reported as <code>N nodes, M edges</code>.</p>
+</li>
+<li>
+<p><strong>RAG Pipeline init</strong> — ChromaDB vector store is initialized with security knowledge documents for the SentinelChat assistant.</p>
+</li>
+<li>
+<p><strong>XGBoost URL Classifier init</strong> — Model weights loaded; F1, AUC, Accuracy printed to stdout.</p>
+</li>
+<li>
+<p><strong>BERT</strong> — Lazy-loaded on first inference (avoids a ~3 second startup delay).</p>
+</li>
+<li>
+<p><strong>OSINT Feed ingestion</strong> — <code>ingest_all_feeds()</code> fetches from ThreatFox, URLhaus, and PhishTank, merges IOCs into the graph, then starts <code>feed_refresh_loop()</code> as a background asyncio task (every 6 hours).</p>
+</li>
+</ol>
+<p>All 16 routers are mounted. A <code>/screenshots</code> static file server is created from <code>backend/data/screenshots/</code> to serve Apify-captured screenshots.</p>
+<hr>
+<h2 id="5-the-core-5-layer-detection-pipeline--routersanalyzepy">5. The Core 5-Layer Detection Pipeline — <code>routers/analyze.py</code> </h2>
+<p>This 917-line file orchestrates every analysis. All three input endpoints call the same internal <code>_run_full_analysis(content, input_type, options)</code> function.</p>
+<h3 id="51-entry-points">5.1 Entry Points </h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Input</th>
+<th>Input Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /api/v1/analyze/email</code></td>
+<td>Raw email text</td>
+<td><code>"email"</code></td>
+</tr>
+<tr>
+<td><code>POST /api/v1/analyze/url</code></td>
+<td>URL string</td>
+<td><code>"url"</code></td>
+</tr>
+<tr>
+<td><code>POST /api/v1/analyze/headers</code></td>
+<td>Raw SMTP headers</td>
+<td><code>"email"</code></td>
+</tr>
+<tr>
+<td><code>POST /api/v1/analyze/attachment</code></td>
+<td>Uploaded file</td>
+<td><code>"email"</code> (extracted text)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-pre-processing">5.2 Pre-Processing </h3>
+<ul>
+<li>URLs are extracted from email bodies via regex: <code>https?://[^\s&lt;&gt;"{}|\\^</code>[]]+`</li>
+<li>Domains are parsed from each URL using <code>tldextract</code></li>
+<li>A unique event ID (<code>evt_</code> + 8 hex chars) is generated for WebSocket tracking</li>
+<li><code>pipeline_start</code> event is emitted to all WebSocket subscribers</li>
+</ul>
+<h3 id="53-layer-1--nlp--header-analysis-parallel">5.3 Layer 1 — NLP + Header Analysis (parallel) </h3>
+<pre data-role="codeBlock" data-info="python" class="language-python python"><code>nlp_result<span class="token punctuation">,</span> header_result <span class="token operator">=</span> <span class="token keyword keyword-await">await</span> asyncio<span class="token punctuation">.</span>gather<span class="token punctuation">(</span>
+    analyze_text<span class="token punctuation">(</span>content<span class="token punctuation">,</span> input_type<span class="token punctuation">)</span><span class="token punctuation">,</span>
+    analyze_headers<span class="token punctuation">(</span>content<span class="token punctuation">)</span> <span class="token keyword keyword-if">if</span> input_type <span class="token operator">==</span> <span class="token string">"email"</span> <span class="token keyword keyword-else">else</span> empty_header<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">)</span>
+</code></pre><ul>
+<li>NLP result emitted as WebSocket <code>step=1</code> with score, confidence, top detected tactics</li>
+<li>Header result emitted as <code>step=2</code> with SPF/DKIM/DMARC outcomes and flags</li>
+</ul>
+<h3 id="54-layer-2--url-analysis--llm-fingerprint-parallel">5.4 Layer 2 — URL Analysis + LLM Fingerprint (parallel) </h3>
+<pre data-role="codeBlock" data-info="python" class="language-python python"><code>url_result<span class="token punctuation">,</span> llm_fingerprint <span class="token operator">=</span> <span class="token keyword keyword-await">await</span> asyncio<span class="token punctuation">.</span>gather<span class="token punctuation">(</span>
+    score_url<span class="token punctuation">(</span>primary_url<span class="token punctuation">,</span> do_live_lookup<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    detect_llm_fingerprint<span class="token punctuation">(</span>content<span class="token punctuation">)</span> <span class="token keyword keyword-if">if</span> input_type <span class="token operator">==</span> <span class="token string">"email"</span> <span class="token keyword keyword-else">else</span> empty_llm<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">)</span>
+</code></pre><ul>
+<li>URL result emitted as <code>step=3</code> — domain age, blacklist hit, top risk features</li>
+<li>LLM fingerprint emitted at <code>step=3</code> — AI probability, verdict (<code>LIKELY_AI</code>/<code>POSSIBLY_AI</code>/<code>LIKELY_HUMAN</code>)</li>
+</ul>
+<h3 id="55-layer-3--visual-sandbox-optional">5.5 Layer 3 — Visual Sandbox (optional) </h3>
+<ul>
+<li>Gated by <code>options.run_visual</code> (default <code>false</code> — Apify is slow)</li>
+<li>Calls <code>analyze_visual(url, url_features)</code> → Apify screenshot → CLIP brand similarity</li>
+<li>Result emitted as <code>step=4</code></li>
+</ul>
+<h3 id="56-layer-4--threat-intelligence--ioc-enrichment">5.6 Layer 4 — Threat Intelligence + IOC Enrichment </h3>
+<ul>
+<li><code>graph.correlate_iocs(domains)</code> — checks input domains against all 50 campaign IOC domain lists in the in-memory knowledge graph</li>
+<li><code>enrich_iocs(domains)</code> — fires live queries against URLhaus and PhishTank APIs</li>
+<li><code>total_intel_boost</code> = knowledge_graph elevation + live IOC boost + first-contact boost, capped at <code>+0.40</code></li>
+<li>Emitted as <code>step=5</code></li>
+</ul>
+<h3 id="57-layer-4b--sender-first-contact-tracking">5.7 Layer 4b — Sender First-Contact Tracking </h3>
+<ul>
+<li><code>check_and_track_domain(sender_domain)</code> checks if this domain has ever appeared in any analysis</li>
+<li>If <strong>first time seen</strong>: adds <code>"First Contact Domain"</code> tactic tagged <code>T1583.001</code> to the result, with a risk boost</li>
+<li>Rationale: real attackers register fresh "burner" domains for each campaign — novelty is a strong phishing signal</li>
+</ul>
+<h3 id="58-layer-5--dark-web-exposure-ps-05">5.8 Layer 5 — Dark Web Exposure (PS-05) </h3>
+<pre data-role="codeBlock" data-info="python" class="language-python python"><code>dark_web_data <span class="token operator">=</span> <span class="token keyword keyword-await">await</span> asyncio<span class="token punctuation">.</span>wait_for<span class="token punctuation">(</span>
+    check_domain_exposure<span class="token punctuation">(</span>all_domains<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    timeout<span class="token operator">=</span><span class="token number">5.0</span>
+<span class="token punctuation">)</span>
+</code></pre><p>Queries HaveIBeenPwned v3 API for breach history associated with the domain. Returns <code>breach_count</code>, <code>dark_web_risk</code> level, <code>total_exposed</code> count.</p>
+<h3 id="59-fusion">5.9 Fusion </h3>
+<p><code>fuse_scores(nlp, url, header, visual, input_type, threat_intel_boost)</code> aggregates all layer outputs into a single <code>threat_score</code> (0–1) and <code>verdict</code>.</p>
+<h3 id="510-kill-chain--explanation">5.10 Kill Chain + Explanation </h3>
+<ul>
+<li><code>build_kill_chain(result)</code> maps the result to 4 MITRE attack stages</li>
+<li><code>generate_explanation_narrative(result, content_preview)</code> asks the LLM to write a 2-3 sentence plain-English explanation for the SOC analyst</li>
+</ul>
+<h3 id="511-xgboost-meta-classifier-override">5.11 XGBoost Meta-Classifier Override </h3>
+<pre data-role="codeBlock" data-info="python" class="language-python python"><code>ml_prob <span class="token operator">=</span> predict_fusion<span class="token punctuation">(</span>result<span class="token punctuation">)</span>   <span class="token comment"># returns -1.0 if model unavailable</span>
+<span class="token keyword keyword-if">if</span> ml_prob <span class="token operator">&gt;=</span> <span class="token number">0</span><span class="token punctuation">:</span>
+    result<span class="token punctuation">[</span><span class="token string">"threat_score"</span><span class="token punctuation">]</span> <span class="token operator">=</span> ml_prob
+    <span class="token comment"># Re-derive verdict from calibrated score</span>
+</code></pre><p>The XGBoost meta-classifier trained on 6,700 emails re-scores the complete result using 125 features extracted from the full pipeline output. If available, its calibrated probability replaces the heuristic fusion score.</p>
+<h3 id="512-post-processing--side-effects">5.12 Post-Processing &amp; Side Effects </h3>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Confidence interval</td>
+<td><code>[score ± (1-conf)*0.25]</code></td>
+</tr>
+<tr>
+<td>Inference time label</td>
+<td>Lightning (&lt;500ms) · Fast (&lt;2s) · Moderate (&lt;5s) · Thorough</td>
+</tr>
+<tr>
+<td>"So What?" summary</td>
+<td>Verdict-specific one-liner for the analyst</td>
+</tr>
+<tr>
+<td>Result cache</td>
+<td>Stored in <code>_result_cache</code> dict, max 500 entries (LRU)</td>
+</tr>
+<tr>
+<td>History recording</td>
+<td><code>record_analysis(result, input_type, preview)</code></td>
+</tr>
+<tr>
+<td>Dashboard counters</td>
+<td><code>increment_analysis_counter(verdict)</code></td>
+</tr>
+<tr>
+<td>WebSocket broadcast</td>
+<td><code>analysis_complete</code> event with full verdict + score</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="6-nlp-engine--modelsnlp_enginepy">6. NLP Engine — <code>models/nlp_engine.py</code> </h2>
+<h3 id="61-mitre-tagged-tactic-registry">6.1 MITRE-Tagged Tactic Registry </h3>
+<p>10 social engineering tactics are mapped to MITRE ATT&amp;CK IDs with calibrated weights:</p>
+<table>
+<thead>
+<tr>
+<th>Tactic</th>
+<th>MITRE ID</th>
+<th>Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Credential Harvesting</td>
+<td>T1056.003</td>
+<td>0.20</td>
+</tr>
+<tr>
+<td>Urgency</td>
+<td>T1566.001</td>
+<td>0.18</td>
+</tr>
+<tr>
+<td>Executive Impersonation</td>
+<td>T1656</td>
+<td>0.17</td>
+</tr>
+<tr>
+<td>BEC Pattern</td>
+<td>T1534</td>
+<td>0.16</td>
+</tr>
+<tr>
+<td>Authority Impersonation</td>
+<td>T1656</td>
+<td>0.15</td>
+</tr>
+<tr>
+<td>Financial Lure</td>
+<td>T1078</td>
+<td>0.14</td>
+</tr>
+<tr>
+<td>Fear / Threat</td>
+<td>T1585</td>
+<td>0.13</td>
+</tr>
+<tr>
+<td>Suspicious Link</td>
+<td>T1204.001</td>
+<td>0.12</td>
+</tr>
+<tr>
+<td>Reward Framing</td>
+<td>T1585.002</td>
+<td>0.10</td>
+</tr>
+<tr>
+<td>Spoofing</td>
+<td>T1566.002</td>
+<td>0.08</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-three-mode-detection-architecture">6.2 Three-Mode Detection Architecture </h3>
+<p><strong>Mode A — GPT-4o-mini via OpenRouter (primary LLM)</strong></p>
+<ul>
+<li>Structured prompt instructs the model to return a strict JSON object containing <code>intent_score</code>, <code>detected_tactics</code>, <code>confidence</code>, <code>explanation</code>, <code>top_phrases</code>, <code>phishing_intent</code></li>
+<li><code>temperature=0.1</code>, <code>max_tokens=500</code>, <code>response_format: json_object</code> for deterministic structured output</li>
+<li>Content truncated to 2,000 characters for latency/cost control</li>
+<li>Falls back gracefully on JSON parse failure (strips markdown code fences via <code>_clean_llm_json</code>)</li>
+</ul>
+<p><strong>Mode B — Fine-tuned BERT (parallel)</strong></p>
+<ul>
+<li><code>bert-base-uncased</code> fine-tuned on ISCX-2016 phishing corpus</li>
+<li>Returns <code>phishing_prob</code> (0.0–1.0) and a binary <code>label</code></li>
+<li>Lazy-loaded: model weights fetched from HuggingFace Hub on first call</li>
+</ul>
+<p><strong>Mode C — Heuristic Fallback</strong></p>
+<ul>
+<li>Regex pattern matching across 10 tactic buckets (each with 2-4 patterns)</li>
+<li>Obfuscation bonus: +0.06 per detected Cyrillic character / HTML entity / percent-encoded sequence</li>
+<li>Benign signal reduction: "unsubscribe", "privacy policy", "best regards", order/ticket/invoice # presence each reduce score by 0.04</li>
+<li>URL count &gt;2 adds +0.05</li>
+</ul>
+<h3 id="63-ensemble-fusion-logic">6.3 Ensemble Fusion Logic </h3>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>GPT + BERT available:
+  score = GPT_score × 0.55 + BERT_prob × 0.45
+  agreement = 1.0 − |GPT_score − BERT_prob|          (0=disagree → 1=perfect)
+  confidence = GPT_conf × 0.70 + agreement × 0.30
+
+Only GPT:    return GPT result directly
+Only BERT:   blend = BERT_prob × 0.65 + heuristic_score × 0.35
+Neither:     pure heuristic
+</code></pre><h3 id="64-output-schema">6.4 Output Schema </h3>
+<pre data-role="codeBlock" data-info="json" class="language-json json"><code><span class="token punctuation">{</span>
+  <span class="token property">"score"</span><span class="token operator">:</span> <span class="token number">0.87</span><span class="token punctuation">,</span>
+  <span class="token property">"confidence"</span><span class="token operator">:</span> <span class="token number">0.91</span><span class="token punctuation">,</span>
+  <span class="token property">"detected_tactics"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">{</span><span class="token property">"name"</span><span class="token operator">:</span> <span class="token string">"Urgency"</span><span class="token punctuation">,</span> <span class="token property">"mitre_id"</span><span class="token operator">:</span> <span class="token string">"T1566.001"</span><span class="token punctuation">,</span> <span class="token property">"confidence"</span><span class="token operator">:</span> <span class="token number">0.92</span><span class="token punctuation">}</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+  <span class="token property">"explanation"</span><span class="token operator">:</span> <span class="token string">"This email uses extreme urgency..."</span><span class="token punctuation">,</span>
+  <span class="token property">"top_phrases"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"act now"</span><span class="token punctuation">,</span> <span class="token string">"account suspended"</span><span class="token punctuation">,</span> <span class="token string">"click below"</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+  <span class="token property">"phishing_intent"</span><span class="token operator">:</span> <span class="token string">"Credential harvesting via fake login portal"</span><span class="token punctuation">,</span>
+  <span class="token property">"gpt_score"</span><span class="token operator">:</span> <span class="token number">0.91</span><span class="token punctuation">,</span>
+  <span class="token property">"bert_score"</span><span class="token operator">:</span> <span class="token number">0.82</span><span class="token punctuation">,</span>
+  <span class="token property">"source"</span><span class="token operator">:</span> <span class="token string">"ensemble_gpt4o_mini_bert"</span>
+<span class="token punctuation">}</span>
+</code></pre><hr>
+<h2 id="7-url-analyzer--modelsurl_analyzerpy">7. URL Analyzer — <code>models/url_analyzer.py</code> </h2>
+<h3 id="71-feature-extraction-150-features-zero-io">7.1 Feature Extraction (150+ features, zero I/O) </h3>
+<p><code>extract_features_sync(url)</code> runs synchronously in memory using <code>tldextract</code> and <code>urlparse</code>. Features are grouped:</p>
+<p><strong>Lexical:</strong> url_length, domain_length, path_length, query_length, num_dots/hyphens/underscores/slashes/at-symbols/percent, has_ip_address, url_entropy, domain_entropy (Shannon entropy)</p>
+<p><strong>Domain structure:</strong> subdomain_count, subdomain_length, tld_risk_high (checked against a curated set of 30 abused TLDs: <code>.tk</code>, <code>.ml</code>, <code>.ga</code>, <code>.cf</code>, <code>.xyz</code>, <code>.top</code>, etc.), tld_risk_medium</p>
+<p><strong>Brand detection:</strong> Checks 35 major brand keywords (Microsoft, Google, Apple, Amazon, PayPal, major banks, FedEx, DocuSign, etc.) against domain and URL path. Cross-references against a <strong>legitimate host whitelist</strong> (20 trusted CDN/platform domains) — if the URL is actually at <code>microsoft.com</code>, brand_in_domain doesn't trigger</p>
+<p><strong>Typosquatting score:</strong> For each brand keyword, if <code>|len(domain) − len(brand)| ≤ 2</code>: pads shorter string and counts character differences. If <code>0.70 &lt; similarity &lt; 1.0</code>, score = <code>similarity × 0.9</code>. Returns the best match across all 35 brands.</p>
+<p><strong>Path/query:</strong> Counts occurrences of 30 suspicious path keywords (login, verify, auth, billing, invoice, etc.) in both domain and path separately; has_exe_extension (<code>.exe</code>, <code>.php</code>, <code>.bat</code>, <code>.vbs</code>, etc.)</p>
+<p><strong>Obfuscation:</strong> hex_encoding (<code>%XX</code>), double_slash in path, <code>@</code> symbol in URL, redirect keywords in URL (<code>redirect=</code>, <code>url=</code>, <code>goto=</code>), excessive hyphens (&gt;3 in domain)</p>
+<h3 id="72-live-async-enrichment">7.2 Live Async Enrichment </h3>
+<p>Three lookups run in parallel for non-whitelisted domains:</p>
+<pre data-role="codeBlock" data-info="python" class="language-python python"><code>whois_data<span class="token punctuation">,</span> dns_data<span class="token punctuation">,</span> urlhaus_data <span class="token operator">=</span> <span class="token keyword keyword-await">await</span> asyncio<span class="token punctuation">.</span>gather<span class="token punctuation">(</span>
+    get_whois_data<span class="token punctuation">(</span>domain<span class="token punctuation">)</span><span class="token punctuation">,</span>   <span class="token comment"># python-whois, 5s timeout</span>
+    get_dns_data<span class="token punctuation">(</span>domain<span class="token punctuation">)</span><span class="token punctuation">,</span>     <span class="token comment"># dnspython (A, MX, TXT/SPF, DMARC), 6s timeout</span>
+    check_urlhaus<span class="token punctuation">(</span>domain<span class="token punctuation">)</span><span class="token punctuation">,</span>    <span class="token comment"># abuse.ch API POST, 4s timeout</span>
+<span class="token punctuation">)</span>
+</code></pre><p><strong>WHOIS enrichment effects:</strong></p>
+<ul>
+<li>Age &lt; 7 days → <code>+0.20</code> (full newly_registered feature weight)</li>
+<li>Age 7–30 days → <code>+0.14</code></li>
+<li>Age 30–90 days → <code>+0.06</code></li>
+<li>Privacy-protected registrar → <code>+0.08</code></li>
+</ul>
+<p><strong>URLhaus hit:</strong> <code>+0.50</code> added directly and confidence set to <code>0.99</code></p>
+<h3 id="73-shap-style-score-components">7.3 SHAP-Style Score Components </h3>
+<p><code>compute_score_components(features, whois, dns, urlhaus)</code> returns a named dict of risk contributions. Known-legitimate hosts exit immediately with <code>{"__legitimate_host": -0.90}</code> causing the scorer to return <code>score=0.04, confidence=0.96</code>.</p>
+<p>The raw URL score = sum of all component values, capped 0.04–0.99.</p>
+<h3 id="74-ml-blend">7.4 ML Blend </h3>
+<pre data-role="codeBlock" data-info="python" class="language-python python"><code>rule_score <span class="token operator">=</span> <span class="token builtin">sum</span><span class="token punctuation">(</span>components<span class="token punctuation">)</span>
+ml_score   <span class="token operator">=</span> _ml_predict<span class="token punctuation">(</span>url<span class="token punctuation">)</span>   <span class="token comment"># XGBoost URL classifier</span>
+final_score <span class="token operator">=</span> rule_score <span class="token operator">*</span> <span class="token number">0.60</span> <span class="token operator">+</span> ml_score <span class="token operator">*</span> <span class="token number">0.40</span>
+</code></pre><p>The 60% rule-engine bias is intentional — the rule engine incorporates live WHOIS/DNS context that the static ML model trained on URL features alone cannot see at inference time.</p>
+<hr>
+<h2 id="8-visual-engine--modelsvisual_enginepy">8. Visual Engine — <code>models/visual_engine.py</code> </h2>
+<h3 id="81-four-step-pipeline">8.1 Four-Step Pipeline </h3>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>URL
+ │
+ ▼
+Apify Actor (FU5kPkREa2rdypuqb — Playwright)
+ │ waitUntil: "domcontentloaded" (8s timeout, 1 retry)
+ ▼
+Screenshot bytes (JPEG/PNG)
+ │
+ ├──► Save to backend/data/screenshots/ → served as /screenshots/{filename}
+ │
+ └──► Replicate CLIP Model (75b33f25)
+       │ Embedding vector (512-dim)
+       ▼
+      Cosine similarity vs 18 brand profiles
+       ▼
+      { score, matched_brand, similarity, screenshot_path }
+</code></pre><h3 id="82-why-domcontentloaded-not-networkidle0">8.2 Why <code>domcontentloaded</code> Not <code>networkidle0</code> </h3>
+<p>Phishing pages render instantly (no complex data loading). Using <code>networkidle0</code> causes the Apify actor to hang on legitimate complex apps (Google Docs, Teams) waiting for WebSocket/XHR traffic to settle. <code>domcontentloaded</code> captures the login redirect wall immediately — which is exactly what phishing clone pages show.</p>
+<h3 id="83-screenshot-extraction-logic">8.3 Screenshot Extraction Logic </h3>
+<p>The actor writes to its <strong>dataset</strong> (not a fixed output key). The engine exhaustively checks:</p>
+<ol>
+<li>All dataset items for raw bytes (<code>bytes</code>/<code>bytearray</code> values with valid magic bytes)</li>
+<li>All dataset items for <code>data:image/...;base64,...</code> strings (decoded and validated)</li>
+<li>All HTTP URL values in dataset items (fetched with 15s timeout and magic-byte checked)</li>
+<li>Key-value store keys: <code>OUTPUT</code>, <code>screenshot</code>, <code>screenshot.jpg</code>, <code>screenshot.jpeg</code>, <code>screenshot.png</code></li>
+</ol>
+<p>Magic-byte validation: JPEG = <code>\xFF\xD8\xFF</code>, PNG = <code>\x89PNG</code>.</p>
+<h3 id="84-brand-profiles">8.4 Brand Profiles </h3>
+<p>18 entries covering: Microsoft, Google, PayPal, Apple, Amazon, Facebook, LinkedIn, Bank of America, Chase, Wells Fargo, Dropbox, DocuSign, Adobe, Office 365, Zoom, Slack, GitHub, plus generic <code>corporate_sso</code> and <code>hr_portal</code> profiles.</p>
+<p>Each profile has a <code>domains</code> list (legitimate URLs to exclude from impersonation matching) and a <code>keywords</code> list for text-based matching.</p>
+<h3 id="85-url-estimation-fallback">8.5 URL Estimation Fallback </h3>
+<p>When Apify is unavailable, <code>estimate_visual_from_url(url, url_features)</code> keyword-matches the URL against all brand profiles and uses <code>brand_impersonation</code> and <code>typosquatting_score</code> from the URL analyzer as proxy for visual similarity. Confidence is 0.55 vs 0.82 for real screenshot analysis.</p>
+<hr>
+<h2 id="9-header-analyzer--modelsheader_analyzerpy">9. Header Analyzer — <code>models/header_analyzer.py</code> </h2>
+<p>Parses raw <strong>SMTP email headers</strong> and outputs structured authentication results. Key fields extracted:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Source Header</th>
+<th>Risk Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SPF result</td>
+<td><code>Authentication-Results</code>, <code>Received-SPF</code></td>
+<td><code>fail</code>/<code>softfail</code> → +score</td>
+</tr>
+<tr>
+<td>DKIM result</td>
+<td><code>Authentication-Results</code></td>
+<td><code>fail</code>/<code>none</code> → +score</td>
+</tr>
+<tr>
+<td>DMARC result</td>
+<td><code>Authentication-Results</code></td>
+<td><code>fail</code>/<code>none</code> → +score</td>
+</tr>
+<tr>
+<td>Reply-To mismatch</td>
+<td><code>From</code> vs <code>Reply-To</code> domains</td>
+<td>Flag <code>reply_to_mismatch</code></td>
+</tr>
+<tr>
+<td>Return-Path mismatch</td>
+<td><code>From</code> vs <code>Return-Path</code> domains</td>
+<td>Flag <code>return_path_mismatch</code></td>
+</tr>
+<tr>
+<td>Missing Message-ID</td>
+<td>Absence of <code>Message-ID</code> header</td>
+<td>Flag <code>missing_message_id</code></td>
+</tr>
+<tr>
+<td>Missing Date</td>
+<td>Absence of <code>Date</code> header</td>
+<td>Flag <code>missing_date_header</code></td>
+</tr>
+<tr>
+<td>Excessive routing hops</td>
+<td>Count of <code>Received:</code> headers &gt; 7</td>
+<td>Flag <code>excessive_routing_hops</code></td>
+</tr>
+<tr>
+<td>Bulk mailer</td>
+<td><code>X-Mailer</code> or <code>List-Unsubscribe</code> present</td>
+<td>Flag <code>bulk_mailer_detected</code></td>
+</tr>
+</tbody>
+</table>
+<p>SPF/DKIM failures inject an <code>Email Spoofing</code> tactic tagged <code>T1566.002</code> into the detected tactics array. Reply-To manipulation injects <code>Reply-To Manipulation</code> tagged <code>T1656</code>.</p>
+<hr>
+<h2 id="10-llm-fingerprint-detector--modelsllm_detectorpy">10. LLM Fingerprint Detector — <code>models/llm_detector.py</code> </h2>
+<h3 id="101-why-this-matters">10.1 Why This Matters </h3>
+<p>Traditional phishing NLP classifiers were trained on human-written phishing emails. AI-generated phishing is structurally different: it's grammatically perfect, stylistically uniform, and uses formulaic structures. Standard classifiers often score it <em>lower</em> than human phishing because it lacks the obvious red flags of manual spam. SentinelAI adds a dedicated layer to catch AI-authored lures.</p>
+<h3 id="102-prong-1--stylometric-analysis-pure-python-no-api">10.2 Prong 1 — Stylometric Analysis (pure Python, no API) </h3>
+<p>Five statistical signals computed on the text, weighted and fused:</p>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>AI Signature</th>
+<th>Human Signature</th>
+<th>Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sentence length std dev</td>
+<td>&lt; 3–4 words (uniform)</td>
+<td>&gt; 8 words (varies)</td>
+<td>20%</td>
+</tr>
+<tr>
+<td>Type-Token Ratio (TTR)</td>
+<td>&lt; 0.50 (repetitive vocab)</td>
+<td>&gt; 0.60 (diverse vocab)</td>
+<td>20%</td>
+</tr>
+<tr>
+<td>Template phrase density</td>
+<td>&gt; 0.04 matches/word</td>
+<td>Low organic phrasing</td>
+<td>25%</td>
+</tr>
+<tr>
+<td>Punctuation regularity</td>
+<td>Near-zero messiness index</td>
+<td>Occasional typos/quirks</td>
+<td>15%</td>
+</tr>
+<tr>
+<td>Paragraph coherence</td>
+<td>High overlap, low variance</td>
+<td>Natural topic drift</td>
+<td>20%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Template phrases:</strong> 20 formulaic patterns common in AI-generated phishing — e.g., <code>"we have detected"</code>, <code>"your account has been"</code>, <code>"within 24/48/72 hours"</code>, <code>"failure to comply will result"</code>.</p>
+<p><strong>TTR computation:</strong> Only first 200 words used (TTR is length-dependent). <code>unique_words / total_words</code>.</p>
+<h3 id="103-prong-2--bert-perplexity-proxy">10.3 Prong 2 — BERT Perplexity Proxy </h3>
+<p>Uses the fine-tuned BERT phishing model to compute prediction entropy on the classifier output:</p>
+<pre data-role="codeBlock" data-info="python" class="language-python python"><code>probs <span class="token operator">=</span> softmax<span class="token punctuation">(</span>logits<span class="token punctuation">)</span>
+entropy <span class="token operator">=</span> −Σ<span class="token punctuation">(</span>p × log<span class="token punctuation">(</span>p<span class="token punctuation">)</span><span class="token punctuation">)</span>
+</code></pre><p><em>Low entropy</em> = model is extremely confident = the text is highly predictable = <strong>likely AI-authored</strong>. Human text with mixed complexity produces higher entropy.</p>
+<h3 id="104-prong-3--gemma-3-12b-meta-analysis-via-openrouter">10.4 Prong 3 — Gemma-3-12B Meta-Analysis via OpenRouter </h3>
+<p>Sends the email to the Gemma-3-12B model with a forensic linguistics prompt. The model is asked to return a JSON with <code>is_ai_generated</code>, <code>ai_probability</code>, <code>confidence</code>, <code>reasoning</code>, and <code>key_indicators</code>. Temperature = 0.1 for determinism.</p>
+<h3 id="105-ensemble-fusion">10.5 Ensemble Fusion </h3>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>All three available:   Stylometric×0.30 + Perplexity×0.25 + Gemma×0.45
+Stylometric + Gemma:   Stylometric×0.40 + Gemma×0.60
+Stylometric + BERT:    Stylometric×0.50 + Perplexity×0.50
+Stylometric only:      raw stylometric score
+</code></pre><p>Confidence is boosted when methods agree: <code>confidence = 0.5 + agreement×0.4 + n_methods×0.05</code></p>
+<p><strong>Verdict thresholds:</strong> <code>LIKELY_AI</code> ≥ 0.70, <code>POSSIBLY_AI</code> ≥ 0.45, <code>LIKELY_HUMAN</code> &lt; 0.45</p>
+<hr>
+<h2 id="11-fusion-engine--modelsfusion_enginepy">11. Fusion Engine — <code>models/fusion_engine.py</code> </h2>
+<h3 id="111-confidence-weighted-ensemble">11.1 Confidence-Weighted Ensemble </h3>
+<p>Each model contributes <code>score × confidence × weight</code> to the numerator. The denominator sums <code>confidence × weight</code> across all active models. This means a model with low confidence (e.g., visual engine when screenshot fails → confidence 0.40) contributes proportionally less than a high-confidence NLP result (0.91).</p>
+<pre data-role="codeBlock" data-info="python" class="language-python python"><code>raw_score <span class="token operator">=</span> <span class="token punctuation">(</span>nlp_score×nlp_conf×w_nlp <span class="token operator">+</span> url_score×url_conf×w_url <span class="token operator">+</span>
+             visual_score×vis_conf×w_vis <span class="token operator">+</span> header_score×hdr_conf×w_hdr<span class="token punctuation">)</span>
+           <span class="token operator">/</span> <span class="token punctuation">(</span>nlp_conf×w_nlp <span class="token operator">+</span> url_conf×w_url <span class="token operator">+</span> vis_conf×w_vis <span class="token operator">+</span> hdr_conf×w_hdr<span class="token punctuation">)</span>
+
+raw_score <span class="token operator">=</span> <span class="token builtin">min</span><span class="token punctuation">(</span>raw_score <span class="token operator">+</span> threat_intel_boost<span class="token punctuation">,</span> <span class="token number">0.99</span><span class="token punctuation">)</span>
+</code></pre><h3 id="112-per-input-type-weights">11.2 Per-Input-Type Weights </h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Email Analysis</th>
+<th>URL Analysis</th>
+<th>Mixed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NLP</td>
+<td><strong>35%</strong></td>
+<td>8%</td>
+<td>32%</td>
+</tr>
+<tr>
+<td>URL</td>
+<td>28%</td>
+<td><strong>55%</strong></td>
+<td>30%</td>
+</tr>
+<tr>
+<td>Visual</td>
+<td>18%</td>
+<td><strong>30%</strong></td>
+<td>20%</td>
+</tr>
+<tr>
+<td>Header</td>
+<td><strong>19%</strong></td>
+<td>7%</td>
+<td>18%</td>
+</tr>
+</tbody>
+</table>
+<p>For URL-only analysis, NLP is nearly weightless because there is no email text to analyze.</p>
+<h3 id="113-verdict--action-mapping">11.3 Verdict + Action Mapping </h3>
+<table>
+<thead>
+<tr>
+<th>Score Range</th>
+<th>Verdict</th>
+<th>Recommended Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.00–0.25</td>
+<td>SAFE</td>
+<td>monitor</td>
+</tr>
+<tr>
+<td>0.25–0.55</td>
+<td>SUSPICIOUS</td>
+<td>flag_for_review</td>
+</tr>
+<tr>
+<td>0.55–0.80</td>
+<td>PHISHING</td>
+<td>quarantine_and_block</td>
+</tr>
+<tr>
+<td>0.80–1.00</td>
+<td>CRITICAL</td>
+<td>quarantine_block_and_alert</td>
+</tr>
+</tbody>
+</table>
+<h3 id="114-tactic-deduplication">11.4 Tactic Deduplication </h3>
+<p>All tactics from all layers are merged into one list and deduplicated by MITRE ID — so if both NLP and header layers detect spoofing, only one <code>Email Spoofing</code> tactic appears in the final result.</p>
+<hr>
+<h2 id="12-kill-chain-engine--engineskill_chainpy">12. Kill Chain Engine — <code>engines/kill_chain.py</code> </h2>
+<p>Maps every phishing detection to a 4-stage MITRE ATT&amp;CK attack progression:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Phase</th>
+<th>MITRE Technique</th>
+<th>PS Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Initial Access</td>
+<td>T1566 — Phishing</td>
+<td>PS-01</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Credential Access</td>
+<td>T1078 — Valid Accounts</td>
+<td>PS-02</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Financial Impact</td>
+<td>T1657 — Financial Theft</td>
+<td>PS-03</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Lateral Movement</td>
+<td>T1534 — Internal Spearphishing</td>
+<td>PS-02</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Stage activation logic:</strong></p>
+<ul>
+<li>Stage 2 active if: visual model matched a brand <strong>OR</strong> <code>"credential"</code> appears in detected tactics</li>
+<li>Stage 3 active if: financial keywords appear in NLP top_phrases (<code>bank</code>, <code>paypal</code>, <code>payment</code>, <code>wire</code>, <code>transfer</code>, <code>invoice</code>, <code>billing</code>)</li>
+<li>Stage 4 active if: overall threat score ≥ 0.70</li>
+</ul>
+<p><strong>Per-stage risk score:</strong></p>
+<ul>
+<li>Stage 2: <code>base_score × 1.1</code> if credential, else <code>base_score × 0.6</code></li>
+<li>Stage 3: <code>base_score × 1.2</code> if financial, else <code>base_score × 0.4</code></li>
+<li>Stage 4: <code>base_score × 0.7</code> if threat active, else 0</li>
+</ul>
+<p><strong>Color coding:</strong> red (≥0.65), amber (≥0.35), slate (inactive)</p>
+<p><strong>Financial impact estimate:</strong></p>
+<ul>
+<li>CRITICAL + financial + FIN7 attribution → <code>$12,000–$85,000</code></li>
+<li>CRITICAL + financial + other actor → <code>$5,000–$45,000</code></li>
+<li>HIGH + credential → <code>$2,500–$15,000</code></li>
+<li>MEDIUM → <code>$500–$5,000</code></li>
+<li>LOW → <code>$0</code></li>
+</ul>
+<p><strong>Containment steps</strong> are tiered by threat score:</p>
+<ul>
+<li>≥0.35: Quarantine email, block IOC domains/IPs</li>
+<li>≥0.65: Force password reset, enable MFA, open incident ticket</li>
+<li>≥0.85: Escalate to L3 SOC, preserve forensic evidence, notify business units</li>
+</ul>
+<hr>
+<h2 id="13-xgboost-meta-classifier--modelssentinel_fusion_modelpy">13. XGBoost Meta-Classifier — <code>models/sentinel_fusion_model.py</code> </h2>
+<h3 id="131-architecture">13.1 Architecture </h3>
+<p>A <strong>second-level classifier</strong> trained on the <em>outputs of the full Sentinel pipeline</em> applied to 6,700 real emails from the <strong>TREC-2007 spam corpus</strong> (5,182 spam / 1,518 ham). It treats the multi-layer analysis result dict as its input — effectively learning a data-driven calibration of the heuristic ensemble.</p>
+<p><strong>Train/val/test split:</strong> 70% / 15% / 15% (stratified by label)</p>
+<h3 id="132-feature-vector--125-features">13.2 Feature Vector — 125 Features </h3>
+<p>Features are extracted from the full analysis result object:</p>
+<ul>
+<li><strong>Core scores:</strong> threat_score, confidence, verdict_encoded, recommended_action_encoded</li>
+<li><strong>NLP features (12):</strong> nlp_score, nlp_weight, nlp_source_encoded, top_phrase_count, tactic_count, per-tactic confidence for each of 10 tactic types</li>
+<li><strong>URL features (37):</strong> url_score, url_weight, url_count, 21 SHAP component values (<code>shap_ip_as_host</code>, <code>shap_brand_impersonation</code>, <code>shap_newly_registered</code>, <code>shap_urlhaus_hit</code>, ...), 15 raw lexical features (lengths, counts, entropy, boolean flags)</li>
+<li><strong>Header features (15):</strong> header_score, header_weight, flag_count, SPF/DKIM/DMARC encoded results, 10 binary flag features</li>
+<li><strong>Threat intel features (7):</strong> has_known_campaign, actor_confidence, related_domains_count, malicious_domain_count, feed_source_count, global_reach_count, ioc_risk_boost</li>
+<li><strong>Dark web features (5):</strong> dark_web_risk encoded, breach_count, total_exposed, source_count</li>
+<li><strong>Kill chain features (9):</strong> active_stage_count, overall_risk, attack_vector_encoded, is_brand_impersonation, per-stage risk scores (4), impact_level_encoded</li>
+</ul>
+<h3 id="133-isotonic-probability-calibration">13.3 Isotonic Probability Calibration </h3>
+<p>Raw XGBoost probabilities are passed through a piecewise-linear calibration curve derived from validation set reliability analysis:</p>
+<table>
+<thead>
+<tr>
+<th>Raw</th>
+<th>Calibrated</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.00</td>
+<td>0.02</td>
+<td>Floor — never claim 0% risk</td>
+</tr>
+<tr>
+<td>0.10</td>
+<td>0.08</td>
+<td>Pull slight over-confidence down</td>
+</tr>
+<tr>
+<td>0.30</td>
+<td>0.28</td>
+<td>Preserve low-risk range</td>
+</tr>
+<tr>
+<td>0.50</td>
+<td>0.50</td>
+<td>Identity at decision boundary</td>
+</tr>
+<tr>
+<td>0.70</td>
+<td>0.72</td>
+<td>Slight boost for high-confidence positives</td>
+</tr>
+<tr>
+<td>0.90</td>
+<td>0.88</td>
+<td>Pull back extreme over-confidence</td>
+</tr>
+<tr>
+<td>1.00</td>
+<td>0.98</td>
+<td>Ceiling — never claim 100% certainty</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="14-threat-knowledge-graph--intelligenceknowledge_graphpy">14. Threat Knowledge Graph — <code>intelligence/knowledge_graph.py</code> </h2>
+<h3 id="141-graph-composition">14.1 Graph Composition </h3>
+<p>A <strong>NetworkX directed graph</strong> (<code>DiGraph</code>) containing:</p>
+<ul>
+<li><strong>5 Threat Actor nodes:</strong> FIN7 (RU, Financial), Lazarus Group (KP, Espionage+Financial), APT28 (RU, Espionage), Scattered Spider (US/UK, Financial), LAPSUS$ (BR/UK, Extortion)</li>
+<li><strong>50 Campaign nodes:</strong> Each with status (active/monitoring/closed), risk_level, sector targets, IOC lists (domains, IPs, hashes), timeline events, attribution</li>
+<li><strong>200+ Domain nodes:</strong> Extracted from campaign IOC lists; linked to their campaign and actor</li>
+<li><strong>100+ IP nodes:</strong> With ASN, country, city, reputation, campaign memberships</li>
+<li><strong>20 MITRE Technique nodes:</strong> Full ATT&amp;CK technique metadata</li>
+</ul>
+<p><strong>Edges:</strong> <code>CONDUCTS</code> (actor→campaign) · <code>USES_DOMAIN</code> (campaign→domain) · <code>OWNS_INFRASTRUCTURE</code> (actor→domain) · <code>USES_IP</code> (campaign→ip) · <code>CONTROLS</code> (actor→ip) · <code>EMPLOYS</code> (actor→technique)</p>
+<h3 id="142-ioc-correlation">14.2 IOC Correlation </h3>
+<p><code>correlate_iocs(domains, ips)</code> iterates all 50 campaigns and checks for domain/IP overlap with input indicators:</p>
+<pre data-role="codeBlock" data-info="python" class="language-python python"><code>domain_hits <span class="token operator">=</span> <span class="token punctuation">[</span>d <span class="token keyword keyword-for">for</span> d <span class="token keyword keyword-in">in</span> domains 
+               <span class="token keyword keyword-if">if</span> <span class="token builtin">any</span><span class="token punctuation">(</span>d <span class="token operator">==</span> cd <span class="token keyword keyword-or">or</span> d<span class="token punctuation">.</span>endswith<span class="token punctuation">(</span><span class="token string">"."</span><span class="token operator">+</span>cd<span class="token punctuation">)</span> <span class="token keyword keyword-or">or</span> cd<span class="token punctuation">.</span>endswith<span class="token punctuation">(</span><span class="token string">"."</span><span class="token operator">+</span>d<span class="token punctuation">)</span> 
+                      <span class="token keyword keyword-for">for</span> cd <span class="token keyword keyword-in">in</span> camp_domains<span class="token punctuation">)</span><span class="token punctuation">]</span>
+</code></pre><p>On a hit, returns the campaign, actor attribution, and a confidence of 0.92. Risk elevation is applied: +0.20 for critical campaigns, +0.12 for high, +0.06 for medium — capped at +0.30 total.</p>
+<h3 id="143-d3js-graph-export">14.3 D3.js Graph Export </h3>
+<p><code>get_graph_data(depth, entity_type, center_node)</code> supports:</p>
+<ul>
+<li>Full graph export (all nodes/edges)</li>
+<li>Entity-type filter (show only actors, or only campaigns, etc.)</li>
+<li>Subgraph BFS from a center node at configurable depth</li>
+</ul>
+<p>Output is D3-compatible <code>{nodes, edges, links}</code> with color coding: actors=<code>#ef4444</code>, campaigns=<code>#f59e0b</code>, domains=<code>#3b82f6</code>, IPs=<code>#10b981</code>, techniques=<code>#8b5cf6</code>.</p>
+<h3 id="144-live-osint-feed-ingestion--intelligencefeed_ingesterpy">14.4 Live OSINT Feed Ingestion — <code>intelligence/feed_ingester.py</code> </h3>
+<p>On startup, three external threat intelligence feeds are fetched and merged into the knowledge graph:</p>
+<ul>
+<li><strong>ThreatFox (<a href="http://abuse.ch">abuse.ch</a>)</strong> malicious IOC API</li>
+<li><strong>URLhaus (<a href="http://abuse.ch">abuse.ch</a>)</strong> malicious URL list</li>
+<li><strong>PhishTank</strong> community-reported phishing URLs</li>
+</ul>
+<p>IOCs are normalized (domain extraction, deduplication) and injected as new domain/IP nodes linked to synthetic campaign entries. A background <code>feed_refresh_loop()</code> re-fetches every 6 hours.</p>
+<hr>
+<h2 id="15-gmail-integration--routersgmailpy">15. Gmail Integration — <code>routers/gmail.py</code> </h2>
+<h3 id="151-oauth2-flow-real-mode">15.1 OAuth2 Flow (Real Mode) </h3>
+<ol>
+<li><code>GET /api/v1/gmail/auth-url</code> → backend generates Google OAuth2 URL with scope <code>gmail.readonly</code></li>
+<li>User redirected to Google consent screen</li>
+<li>Google redirects back with <code>?code=...</code> to <code>/api/v1/gmail/callback</code></li>
+<li>Backend POSTs to <code>https://oauth2.googleapis.com/token</code> to exchange code for <code>access_token</code> + <code>refresh_token</code></li>
+<li>Gmail API service built; user email fetched from <code>users.getProfile()</code></li>
+<li>Credentials persisted to <code>backend/data/gmail_token.json</code> and survive backend restarts</li>
+</ol>
+<p><strong>Demo Mode:</strong> When Google credentials are not configured, <code>GET /api/v1/gmail/demo-connect</code> activates 8 hardcoded pre-classified demo emails spanning all verdict tiers.</p>
+<h3 id="152-inbox-fetch--analysis-pipeline">15.2 Inbox Fetch + Analysis Pipeline </h3>
+<p><code>_fetch_real_inbox(session)</code> implements a <strong>cache-first strategy</strong>:</p>
+<ol>
+<li>Lists current inbox message IDs (lightweight API call — no body fetched)</li>
+<li>Identifies IDs not yet in <code>_gmail_cache</code> dictionary</li>
+<li>Fetches full message objects for up to 3 new emails (controlled API cost)</li>
+<li>Runs <code>_analyze_and_cache(msg, session)</code> in parallel via <code>asyncio.gather</code></li>
+<li>Returns all inbox emails in original order from cache</li>
+</ol>
+<p><strong><code>_analyze_and_cache()</code> per message:</strong></p>
+<ul>
+<li>Parses MIME structure recursively: extracts <code>From</code>/<code>Subject</code>/body (prefers <code>text/plain</code>, falls back to stripped <code>text/html</code>), attachment metadata</li>
+<li>Detects "image-heavy flyer" emails (&lt; 200 chars body + image attachments): injects analyst note informing the LLM</li>
+<li><strong>PII Redaction:</strong> <code>redact_pii(email_content)</code> strips real names, email addresses, phone numbers before sending to LLM</li>
+<li>Runs <code>_run_full_analysis(redacted_content, "email")</code> — the complete 5-layer pipeline</li>
+<li>Downloads attachment bytes for scannable file types (controlled by <code>_CONTENT_SCAN_EXTS</code> set)</li>
+<li>Runs <code>analyze_attachments_with_bytes()</code> for all attachments</li>
+<li><strong>Risk boost:</strong> if <code>attachment_risk &gt; 0.65</code>, the email's final <code>risk_score += 0.15</code></li>
+<li>Writes finished entry to <code>_gmail_cache</code> and persists to disk as JSON</li>
+</ul>
+<h3 id="153-mime-parsing-details">15.3 MIME Parsing Details </h3>
+<p><code>_collect_body_parts(payload, plains, htmls)</code> recursively walks the MIME part tree. For <code>multipart/*</code> messages it dives into <code>parts[]</code>. Inline images (CID attachments) are captured as attachment metadata with <code>"inline": true</code>. <code>_decode_body()</code> prefers <code>text/plain</code> when ≥ 120 characters; falls back to stripped <code>text/html</code>.</p>
+<p>RFC 2047 encoded header values (e.g., <code>=?UTF-8?B?...?=</code>) are decoded via Python's <code>email.header.decode_header()</code>.</p>
+<hr>
+<h2 id="16-url-sandbox--routerssandboxpy">16. URL Sandbox — <code>routers/sandbox.py</code> </h2>
+<p>Deep behavioral analysis running four probes in parallel:</p>
+<h3 id="161-redirect-chain-unwinding">16.1 Redirect Chain Unwinding </h3>
+<p><code>_unwind_redirects(url)</code> uses <code>httpx</code> with <code>follow_redirects=False</code> to manually follow each hop. Tracks up to 10 intermediate URLs. Detects domain changes across the chain (a strong phishing signal — original link goes to <code>bitly.com</code>, ends at <code>paypal-verify.xyz</code>).</p>
+<h3 id="162-ssl-certificate-inspection">16.2 SSL Certificate Inspection </h3>
+<p><code>_get_ssl_info(hostname)</code> connects to port 443 via raw socket + <code>ssl.create_default_context()</code>. Extracts: <code>issuer</code>, <code>subject</code>, <code>notAfter</code> expiry, Subject Alternative Names. <code>SSLCertVerificationError</code> is caught and flagged as "self-signed or expired."</p>
+<h3 id="163-dom-scraping">16.3 DOM Scraping </h3>
+<p><code>_scrape_page_info(url)</code> fetches HTML with a realistic browser User-Agent. Extracts:</p>
+<ul>
+<li>Page <code>&lt;title&gt;</code></li>
+<li>Input elements of type <code>password</code>, <code>email</code>, <code>text</code> (password field = high-risk)</li>
+<li>External <code>&lt;script src="..."&gt;</code> URLs from foreign domains</li>
+<li><code>&lt;iframe src="..."&gt;</code> count</li>
+<li>15 hardcoded suspicious keywords scanned in the HTML body</li>
+</ul>
+<p><strong>Credential harvesting detection:</strong> <code>has_password_field AND len(suspicious_keywords) &gt;= 2</code></p>
+<h3 id="164-risk-scoring">16.4 Risk Scoring </h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Risk Added</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>≥ 3 redirect hops</td>
+<td>+0.25</td>
+</tr>
+<tr>
+<td>Invalid SSL cert</td>
+<td>+0.20</td>
+</tr>
+<tr>
+<td>Password field present</td>
+<td>+0.20</td>
+</tr>
+<tr>
+<td>Credential harvesting indicators</td>
+<td>+0.15</td>
+</tr>
+<tr>
+<td>Domain changed across redirect chain</td>
+<td>+0.15</td>
+</tr>
+<tr>
+<td>Suspicious keyword hits (×0.02 each)</td>
+<td>up to +0.10</td>
+</tr>
+<tr>
+<td>&gt; 2 iframes</td>
+<td>+0.10</td>
+</tr>
+</tbody>
+</table>
+<p>Verdict: PHISHING (≥0.65), SUSPICIOUS (≥0.35), CLEAN.</p>
+<hr>
+<h2 id="17-qr-quishing-module--routersquishingpy">17. QR Quishing Module — <code>routers/quishing.py</code> </h2>
+<h3 id="171-why-this-matters">17.1 Why This Matters </h3>
+<p>QR code phishing ("Quishing") bypasses all standard email link scanners because the malicious URL is encoded in an image — no plain-text URL exists in the email body. Attack volume grew 587% in 2023-2025.</p>
+<h3 id="172-decode-pipeline">17.2 Decode Pipeline </h3>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>Image upload (multipart or base64)
+        │
+        ├─► pyzbar.decode(PIL.Image)     ←── primary (fast, high accuracy)
+        │
+        └─► cv2.QRCodeDetector()         ←── fallback (OpenCV, no pyzbar needed)
+</code></pre><p>If decoded content starts with <code>http</code>/<code>www</code> → forwarded to <code>_run_full_analysis(url, "url")</code> — the complete 5-layer pipeline runs on the embedded URL.</p>
+<p>Non-URL QR content (vCards, plain text, WiFi credentials) is returned without analysis with <code>"is_url": false</code>.</p>
+<h3 id="173-two-endpoints">17.3 Two Endpoints </h3>
+<ul>
+<li><code>POST /api/v1/quishing/decode</code> — accepts <code>multipart/form-data</code> image upload (max 10MB)</li>
+<li><code>POST /api/v1/quishing/decode-base64</code> — accepts base64 data URL (from browser webcam canvas capture)</li>
+</ul>
+<hr>
+<h2 id="18-dashboard--routersdashboardpy--frontend">18. Dashboard — <code>routers/dashboard.py</code> + Frontend </h2>
+<h3 id="181-backend-kpi-endpoint">18.1 Backend KPI Endpoint </h3>
+<p><code>GET /api/v1/dashboard/metrics</code> combines:</p>
+<ul>
+<li><strong>Live session counters</strong> from <code>_analysis_counter</code> (updated on every analysis)</li>
+<li><strong>Seeded historical baseline</strong> (48,902 analyses, 1,284 threats) for a credible demo</li>
+<li><strong>Real AI accuracy</strong> computed as average of XGBoost URL classifier + BERT phishing model evaluation metrics fetched live</li>
+</ul>
+<h3 id="182-threat-feed">18.2 Threat Feed </h3>
+<p><code>GET /api/v1/dashboard/feed</code> cycles through 20 curated threat event templates (BEC interceptions, malware blocks, credential stuffing detections, wire fraud flags, etc.). Each call rotates the cursor by 1, randomizes timestamps within the past 120 minutes. Simulates a live SOC event stream.</p>
+<h3 id="183-timeline-data">18.3 Timeline Data </h3>
+<p><code>GET /api/v1/dashboard/timeline</code> generates hourly threat counts for the past N hours with realistic patterns: business hours (9am–6pm) have higher baseline counts than off-hours.</p>
+<h3 id="184-frontend-dashboard-page-appdashboardpagetsx">18.4 Frontend Dashboard Page (<code>app/dashboard/page.tsx</code>) </h3>
+<p>Fetches 4 APIs in parallel on mount and refreshes every 30 seconds. Renders with <strong>Framer Motion</strong> staggered animations (0.1s delay between KPI cards).</p>
+<p><strong>KPI Cards:</strong> Threats Detected, Total Analyzed, Detection Speed, AI Accuracy — all from live backend data with Framer Motion entry animations.</p>
+<p><strong>Quick Scan Widget:</strong> Inline URL/email input → detects if input is a URL or text → calls appropriate endpoint → shows verdict badge inline without leaving the page.</p>
+<p><strong>Model Performance Panel:</strong> Conditionally rendered only when real evaluation metrics exist. Shows F1, AUC, Accuracy, Precision, Recall side-by-side for XGBoost URL classifier and BERT phishing detector.</p>
+<p><strong>Threat Timeline</strong> (<code>ThreatTimeline</code>): 24h stacked bar chart (phishing + suspicious) from <code>GET /api/v1/history/trends</code>.</p>
+<p><strong>Risk Donut</strong> (<code>RiskDonut</code>): Recharts donut chart of SAFE / SUSPICIOUS / PHISHING / CRITICAL breakdown from history stats.</p>
+<p><strong>Threat Feed</strong> (<code>ThreatFeed</code>): Scrolling event feed polling <code>/api/v1/dashboard/feed</code> every 30s.</p>
+<hr>
+<h2 id="19-websocket-streaming--routersstreampy">19. WebSocket Streaming — <code>routers/stream.py</code> </h2>
+<p><code>WS /api/v1/stream</code> maintains a set of active WebSocket connections. <code>emit_threat_event(data)</code> broadcasts a JSON payload to all connected clients.</p>
+<p>The analyze pipeline emits events at each stage:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Event Type</th>
+<th>Key Data</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>pipeline_start</code></td>
+<td>input_type, status: running</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>nlp</code></td>
+<td>score, confidence, detected tactics, phishing intent</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>header</code></td>
+<td>SPF/DKIM/DMARC, flag list</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>url</code></td>
+<td>risk score, domain age, blacklist hit, top features</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>llm_fingerprint</code></td>
+<td>ai_probability, verdict</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>visual</code></td>
+<td>brand match, similarity score, screenshot path</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>intel</code></td>
+<td>IOC match count, risk boost, first-contact flag</td>
+</tr>
+<tr>
+<td>Final</td>
+<td><code>analysis_complete</code></td>
+<td>full result object with all fields</td>
+</tr>
+</tbody>
+</table>
+<p>Frontend components subscribe on mount and update their state as each event arrives — creating a live "analysis in progress" experience with progressive result reveal.</p>
+<hr>
+<h2 id="20-sentinelchat--chat">20. SentinelChat — <code>chat/</code> </h2>
+<h3 id="rag-pipeline-chatrag_pipelinepy">RAG Pipeline (<code>chat/rag_pipeline.py</code>) </h3>
+<p>ChromaDB vector store pre-populated with cybersecurity knowledge documents. On each chat query:</p>
+<ol>
+<li>Query is embedded</li>
+<li>Top-k most similar document chunks retrieved</li>
+<li>Retrieved context injected into the LLM system prompt</li>
+</ol>
+<h3 id="chat-api-routerschatpy">Chat API (<code>routers/chat.py</code>) </h3>
+<p><code>POST /api/v1/chat</code> handles multi-turn conversations. Uses <code>OPENROUTER_CHAT_MODEL</code> (currently <code>google/gemma-3-12b-it</code>). Conversation history maintained client-side and sent with each request to preserve context.</p>
+<h3 id="explanation-generator-chatsentinel_chatpy">Explanation Generator (<code>chat/sentinel_chat.py</code>) </h3>
+<p><code>generate_explanation_narrative(result, content_preview)</code> constructs a structured prompt containing the verdict, threat score, top 3 tactics, threat actor attribution, and MITRE IDs, then asks the LLM to write a 2-3 sentence plain-English explanation. This text populates the <code>ExplanationCard</code> component in the analyze UI.</p>
+<hr>
+<h2 id="21-analysis-frontend-components--componentsanalyze">21. Analysis Frontend Components — <code>components/analyze/</code> </h2>
+<p>18 modular React components render the analysis result:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AnalysisInputSection</code></td>
+<td>Multi-tab input (Email · URL · Headers · File · QR Code), triggers analysis</td>
+</tr>
+<tr>
+<td><code>ThreatScoreCard</code></td>
+<td>Animated radial gauge showing <code>threat_score</code> with verdict badge</td>
+</tr>
+<tr>
+<td><code>AnalysisSummaryBanner</code></td>
+<td>Top-banner with "so what?" one-liner + recommended action button</td>
+</tr>
+<tr>
+<td><code>ColorCodedKillChain</code></td>
+<td>4-stage kill chain with color-coded risk levels (red/amber/slate)</td>
+</tr>
+<tr>
+<td><code>ModelBreakdown</code></td>
+<td>Per-layer score bars (NLP, URL, Visual, Header) with weights</td>
+</tr>
+<tr>
+<td><code>EvidencePanel</code></td>
+<td>All detected tactics with MITRE IDs and confidence indicators</td>
+</tr>
+<tr>
+<td><code>EvidenceChainCard</code></td>
+<td>Evidence timeline cards linking each finding to its source layer</td>
+</tr>
+<tr>
+<td><code>ExplanationCard</code></td>
+<td>LLM-generated narrative explanation rendered as structured text</td>
+</tr>
+<tr>
+<td><code>LLMFingerprintCard</code></td>
+<td>AI authorship probability + stylometric component scores + verdict</td>
+</tr>
+<tr>
+<td><code>IntelCard</code></td>
+<td>Threat actor name, campaign ID, attribution confidence, IOC sources</td>
+</tr>
+<tr>
+<td><code>TacticsCard</code></td>
+<td>Compact MITRE ATT&amp;CK tactic list with technique IDs</td>
+</tr>
+<tr>
+<td><code>ShapChart</code></td>
+<td>Recharts bar chart of SHAP URL feature importance values</td>
+</tr>
+<tr>
+<td><code>SenderFirstContactCard</code></td>
+<td>Domain novelty alert with first-seen timestamp</td>
+</tr>
+<tr>
+<td><code>DeepDivePanel</code></td>
+<td>Extended analysis controls (visual scan toggle, deep options)</td>
+</tr>
+<tr>
+<td><code>TransparencyPanel</code></td>
+<td>Full raw JSON result + all model layer outputs for audit</td>
+</tr>
+<tr>
+<td><code>InputPanel</code></td>
+<td>Displays the submitted content (email, URL, etc.) with preview</td>
+</tr>
+<tr>
+<td><code>ExecutionTraceCard</code></td>
+<td>For file uploads: step-by-step trace of what the file would do</td>
+</tr>
+<tr>
+<td><code>InputTypeCard</code></td>
+<td>Badge indicating which input type was used</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="22-behavioral-analysis-modules--behavioral">22. Behavioral Analysis Modules — <code>behavioral/</code> </h2>
+<h3 id="bot-detector-behavioralbot_detectorpy--ps-02">Bot Detector (<code>behavioral/bot_detector.py</code>) — PS-02 </h3>
+<p>Detects automated credential stuffing attacks by analyzing:</p>
+<ul>
+<li>Request rate uniformity (bots are suspiciously regular; humans are not)</li>
+<li>Inter-request timing variance</li>
+<li>User-agent string consistency across requests</li>
+<li>IP geolocation spread (same credentials from 3 countries in 4 minutes)</li>
+<li>Failed authentication ratio</li>
+</ul>
+<h3 id="fraud-correlator-behavioralfraud_correlatorpy--ps-03">Fraud Correlator (<code>behavioral/fraud_correlator.py</code>) — PS-03 </h3>
+<p>Correlates phishing detections with downstream fraud signals:</p>
+<ul>
+<li>Wire transfer requests following credential theft events</li>
+<li>Payment method / bank account changes post-phishing</li>
+<li>Cross-account behavioral anomalies (access from new device/location after phishing)</li>
+</ul>
+<hr>
+<h2 id="23-attachment-analyzer--modelsattachment_analyzerpy">23. Attachment Analyzer — <code>models/attachment_analyzer.py</code> </h2>
+<p>Performs <strong>Tier-2 static content inspection</strong> on uploaded files (max 20MB):</p>
+<ul>
+<li><strong>Office OOXML</strong> (DOCX/XLSX/PPTX): ZIP archive inspection for VBA macro streams, embedded OLE objects, external data connections</li>
+<li><strong>PDF</strong>: Checks for embedded JavaScript, <code>/Launch</code> actions, external payload URLs, encrypted streams</li>
+<li><strong>EXE/PE</strong>: Reads PE header — checks for packed sections, suspicious import table entries</li>
+<li><strong>ZIP archives</strong>: Inspects contents recursively for nested executables or scripts</li>
+<li><strong>HTML/SVG</strong>: Scans for obfuscated scripts, data URIs, credential-form patterns</li>
+</ul>
+<p><code>generate_execution_trace(filename, findings, data)</code> constructs a step-by-step "if this file were opened" impact trace. <code>enrich_trace_with_live_probing()</code> then follows any URLs found in the file — checks SSL, follows redirects, detects credential form presence.</p>
+<hr>
+<h2 id="24-technology-stack">24. Technology Stack </h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>API Framework</strong></td>
+<td>FastAPI 0.110 + Uvicorn</td>
+</tr>
+<tr>
+<td><strong>Primary LLM</strong></td>
+<td>Gemma-3-12B-IT via OpenRouter</td>
+</tr>
+<tr>
+<td><strong>BERT Model</strong></td>
+<td>HuggingFace <code>transformers</code> — fine-tuned on ISCX-2016</td>
+</tr>
+<tr>
+<td><strong>URL ML</strong></td>
+<td>XGBoost (scikit-learn API) — 31 URL features</td>
+</tr>
+<tr>
+<td><strong>Meta-Classifier</strong></td>
+<td>XGBoost — 125 features, trained on TREC-2007 pipeline outputs</td>
+</tr>
+<tr>
+<td><strong>Screenshot</strong></td>
+<td>Apify Actor FU5kPkREa2rdypuqb (Playwright headless browser)</td>
+</tr>
+<tr>
+<td><strong>CLIP Vision</strong></td>
+<td>Replicate API — model version 75b33f25</td>
+</tr>
+<tr>
+<td><strong>Threat Graph</strong></td>
+<td>NetworkX DiGraph</td>
+</tr>
+<tr>
+<td><strong>Vector Store</strong></td>
+<td>ChromaDB (RAG pipeline)</td>
+</tr>
+<tr>
+<td><strong>Dark Web</strong></td>
+<td>HaveIBeenPwned API v3</td>
+</tr>
+<tr>
+<td><strong>OSINT Feeds</strong></td>
+<td>ThreatFox · URLhaus · PhishTank (all free APIs)</td>
+</tr>
+<tr>
+<td><strong>Gmail</strong></td>
+<td>Google Gmail API v1 + OAuth2 (read-only scope)</td>
+</tr>
+<tr>
+<td><strong>QR Decode</strong></td>
+<td>pyzbar (primary) + OpenCV <code>QRCodeDetector</code> (fallback)</td>
+</tr>
+<tr>
+<td><strong>DNS Lookup</strong></td>
+<td>dnspython</td>
+</tr>
+<tr>
+<td><strong>WHOIS</strong></td>
+<td>python-whois</td>
+</tr>
+<tr>
+<td><strong>HTTP Client</strong></td>
+<td>httpx (async) + requests (sync wrappers in threads)</td>
+</tr>
+<tr>
+<td><strong>Frontend</strong></td>
+<td>Next.js 14 (App Router) + TypeScript</td>
+</tr>
+<tr>
+<td><strong>UI Primitives</strong></td>
+<td>shadcn/ui + Radix UI + Tailwind CSS</td>
+</tr>
+<tr>
+<td><strong>Charts</strong></td>
+<td>Recharts</td>
+</tr>
+<tr>
+<td><strong>Animations</strong></td>
+<td>Framer Motion</td>
+</tr>
+<tr>
+<td><strong>Real-time</strong></td>
+<td>WebSocket (FastAPI native)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="25-data-flow--end-to-end">25. Data Flow — End to End </h2>
+<pre data-role="codeBlock" data-info="" class="language-text"><code>User Input
+(Email text / URL string / QR image / File upload / Gmail inbox)
+         │
+         ▼
+FastAPI Router (analyze.py / sandbox.py / quishing.py / gmail.py / bulk.py)
+         │
+         ├── [Layer 1, parallel] ──────────────────────────────────┐
+         │    NLP Engine                                            │
+         │     ├─ GPT-4o-mini (OpenRouter) ← structured prompt     │
+         │     ├─ BERT Phishing Model ← ISCX-2016 fine-tuned       │
+         │     └─ Heuristic fallback ← regex pattern matching       │
+         │    Header Analyzer                                        │
+         │     ├─ SPF/DKIM/DMARC parsing                           │
+         │     └─ Routing + spoofing flags                          │
+         │                                                           │ WebSocket
+         ├── [Layer 2, parallel] ──────────────────────────────────┤ events
+         │    URL Analyzer                                           │ emitted
+         │     ├─ 150+ feature extraction (sync)                   │ at each
+         │     ├─ WHOIS / DNS / URLhaus (async parallel)           │ step
+         │     └─ XGBoost URL classifier                            │
+         │    LLM Fingerprint Detector                               │
+         │     ├─ Stylometric analysis (5 signals)                  │
+         │     ├─ BERT perplexity proxy                             │
+         │     └─ Gemma-3-12B meta-analysis                         │
+         │                                                           │
+         ├── [Layer 3, optional] ──────────────────────────────────┤
+         │    Visual Engine                                          │
+         │     ├─ Apify Playwright screenshot                        │
+         │     ├─ Replicate CLIP embedding                          │
+         │     └─ Cosine similarity vs 18 brand profiles            │
+         │                                                           │
+         ├── [Layer 4+] ───────────────────────────────────────────┤
+         │    Threat Knowledge Graph IOC correlation                 │
+         │    Live OSINT feed enrichment (URLhaus / PhishTank)      │
+         │    Sender first-contact domain tracking                   │
+         │    Dark web exposure check (HaveIBeenPwned)              │
+         │                                                           │
+         ▼                                                           │
+    Fusion Engine (confidence-weighted ensemble)                    │
+         │                                                           │
+         ▼                                                           │
+    Kill Chain Builder (4-stage MITRE ATT&amp;CK mapping)              │
+         │                                                           │
+         ▼                                                           │
+    LLM Explanation Generator (Gemma-3 narrative)                  │
+         │                                                           │
+         ▼                                                           │
+    XGBoost Meta-Classifier (125 features → calibrated probability)│
+         │                                                           │
+         ▼                                                           ▼
+    Final Result Object                                      WebSocket
+    ─────────────────────                                  "analysis_complete"
+    threat_score (0–1, calibrated)
+    verdict (SAFE/SUSPICIOUS/PHISHING/CRITICAL)
+    confidence + confidence_interval
+    model_breakdown (per-layer scores + weights)
+    detected_tactics (MITRE-tagged, deduplicated)
+    kill_chain (4 stages + containment + impact)
+    llm_fingerprint (AI authorship detection)
+    threat_intelligence (actor, campaign, IOCs)
+    dark_web_exposure (breach count, risk level)
+    explanation_narrative (plain-English LLM text)
+    so_what (one-liner verdict summary)
+    inference_time_ms + inference_time_label
+         │
+         ├──► In-memory result cache (_result_cache, max 500 LRU)
+         ├──► Analysis history (JSON, persistent)
+         ├──► Dashboard counters (live KPIs)
+         └──► WebSocket broadcast to all subscribed frontend clients
+</code></pre><hr>
+<h2 id="26-api-reference-summary">26. API Reference Summary </h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td>/api/v1/analyze/email</td>
+<td>Full 5-layer email analysis</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/analyze/url</td>
+<td>Full 5-layer URL analysis</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/analyze/headers</td>
+<td>Email header forensics</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/analyze/attachment</td>
+<td>File upload inspection</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/sandbox/analyze</td>
+<td>Deep URL behavioral sandbox</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/quishing/decode</td>
+<td>QR code image → URL analysis</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/quishing/decode-base64</td>
+<td>Base64 QR → URL analysis</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/bulk/upload</td>
+<td>CSV batch file analysis</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/gmail/auth-url</td>
+<td>Start Gmail OAuth2 flow</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/gmail/callback</td>
+<td>OAuth2 redirect handler</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/gmail/demo-connect</td>
+<td>Activate demo inbox mode</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/gmail/inbox</td>
+<td>Fetch + analyze Gmail inbox</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/gmail/analyze/{id}</td>
+<td>Analyze specific Gmail message</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/dashboard/metrics</td>
+<td>Live KPI metrics</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/dashboard/feed</td>
+<td>Live threat event feed</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/dashboard/timeline</td>
+<td>Hourly threat timeline</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/history</td>
+<td>Past analysis records</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/history/stats</td>
+<td>Aggregate statistics</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/history/trends</td>
+<td>Hourly trend data (24h)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/campaigns</td>
+<td>Campaign intelligence list</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/api/v1/intelligence/graph</td>
+<td>D3 knowledge graph data</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/chat</td>
+<td>SentinelChat conversational AI</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/feedback</td>
+<td>Analyst verdict feedback</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>/api/v1/reports/generate</td>
+<td>PDF/JSON incident report</td>
+</tr>
+<tr>
+<td>WS</td>
+<td>/api/v1/stream</td>
+<td>Real-time pipeline events</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/health</td>
+<td>System health + model status</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>SentinelAI Fusion v3.0.0 — Documentation generated April 2026</em></p>
+
+      </div>
+      
+      
+    
+    
+    
+    
+    
+    
+  
+    </body></html>

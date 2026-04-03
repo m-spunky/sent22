@@ -1,6 +1,8 @@
 "use client"
 
-import React from "react"
+import React, { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { getThreatFeed, ThreatFeedEvent } from "@/lib/api"
 import {
   ShieldCheck,
   Menu,
@@ -33,6 +35,12 @@ interface HeaderProps {
 
 export function Header({ sidebarCollapsed, setSidebarCollapsed }: HeaderProps) {
   const { visualSandboxEnabled, setVisualSandboxEnabled } = useGlobalStore()
+  const router = useRouter()
+  const [notifications, setNotifications] = useState<ThreatFeedEvent[]>([])
+
+  useEffect(() => {
+    getThreatFeed(4).then(d => setNotifications(d.events)).catch(() => {})
+  }, [])
 
   return (
     <header className="h-14 w-full flex items-center justify-between px-4 md:px-6 bg-[#0d1117]/80 backdrop-blur-sm border-b border-blue-500/8 relative z-40">
@@ -77,6 +85,11 @@ export function Header({ sidebarCollapsed, setSidebarCollapsed }: HeaderProps) {
         <div className="hidden lg:flex items-center relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors transition-all duration-300" />
           <Input 
+             onKeyDown={e => {
+               if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                 router.push(`/dashboard/history?q=${encodeURIComponent(e.currentTarget.value)}`)
+               }
+             }}
              className="w-full md:w-64 xl:w-80 bg-[#070D14] border-white/5 focus:border-accent/40 rounded-xl pl-10 text-xs font-bold transition-all focus:ring-accent/20 placeholder:text-muted-foreground/40 shadow-inner" 
              placeholder="Search platform..."
           />
@@ -114,26 +127,38 @@ export function Header({ sidebarCollapsed, setSidebarCollapsed }: HeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9 md:h-10 md:w-10 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded-xl relative transition-all active:scale-90">
                 <Bell className="h-4 w-4 md:h-5 md:w-5" />
-                <Badge className="bg-destructive text-destructive-foreground text-[8px] h-4 min-w-4 flex items-center justify-center rounded-full p-0 absolute -top-1 -right-1 border-2 border-[#070D14] shadow-lg shadow-destructive/20 animate-in zoom-in duration-500">
-                  4
-                </Badge>
+                {notifications.length > 0 && (
+                  <Badge className="bg-destructive text-destructive-foreground text-[8px] h-4 min-w-4 flex items-center justify-center rounded-full p-0 absolute -top-1 -right-1 border-2 border-[#070D14] shadow-lg shadow-destructive/20 animate-in zoom-in duration-500">
+                    {notifications.length}
+                  </Badge>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[85vw] md:w-80 bg-[#0D1B2A] border-blue-500/20 rounded-2xl p-2 shadow-2xl backdrop-blur-xl">
                <div className="p-3 border-b border-white/5 mb-2">
                  <h4 className="text-xs font-black uppercase tracking-widest text-accent">Real-time Alerts</h4>
                </div>
-               <DropdownMenuItem className="p-3 rounded-xl focus:bg-accent/10 cursor-pointer border border-transparent focus:border-accent/20 transition-all">
-                  <div className="flex space-x-3">
-                    <div className="h-10 w-10 shrink-0 rounded-xl bg-destructive/10 flex items-center justify-center border border-destructive/20">
-                      <Filter className="h-5 w-5 text-destructive" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-black text-foreground leading-none">Campaign Peak Detected</p>
-                      <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 opacity-70 italic lowercase">Infrastructure correlation peak for CAMP-2026</p>
-                    </div>
-                  </div>
-               </DropdownMenuItem>
+               {notifications.length === 0 ? (
+                 <div className="p-4 text-center text-xs text-slate-500 font-mono">No recent alerts.</div>
+               ) : (
+                 notifications.map(n => (
+                   <DropdownMenuItem key={n.id} className="p-3 rounded-xl focus:bg-accent/10 cursor-pointer border border-transparent focus:border-accent/20 transition-all">
+                      <div className="flex space-x-3 w-full">
+                        <div className={cn("h-10 w-10 shrink-0 rounded-xl flex items-center justify-center border", 
+                          n.severity === "critical" ? "bg-red-500/10 border-red-500/20 text-red-400" :
+                          n.severity === "high" ? "bg-orange-500/10 border-orange-500/20 text-orange-400" :
+                          "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                        )}>
+                          <Filter className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 w-full overflow-hidden">
+                          <p className="text-xs font-black text-foreground leading-none truncate">{n.title}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 opacity-70 italic lowercase break-words">{n.description}</p>
+                        </div>
+                      </div>
+                   </DropdownMenuItem>
+                 ))
+               )}
             </DropdownMenuContent>
           </DropdownMenu>
 

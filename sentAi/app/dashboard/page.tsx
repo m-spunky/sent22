@@ -69,6 +69,7 @@ export default function DashboardPage() {
   const [metrics, setMetrics] = useState<Metrics | null>(null)
   const [historyStats, setHistoryStats] = useState<Stats | null>(null)
   const [modelMetrics, setModelMetrics] = useState<ModelMetrics | null>(null)
+  const [timelineData, setTimelineData] = useState<{ hourly: Record<string, any>; total_last_24h: number } | null>(null)
   const [quickInput, setQuickInput] = useState("")
   const [quickLoading, setQuickLoading] = useState(false)
   const [quickResult, setQuickResult] = useState<{ verdict: string; score: number } | null>(null)
@@ -77,14 +78,16 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [mResp, sResp, mmResp] = await Promise.all([
+        const [mResp, sResp, mmResp, tResp] = await Promise.all([
           fetch("/api/v1/dashboard/metrics"),
           fetch("/api/v1/history/stats"),
           fetch("/api/v1/metrics"),
+          fetch("/api/v1/history/trends")
         ])
         if (mResp.ok) setMetrics(await mResp.json())
         if (sResp.ok) setHistoryStats(await sResp.json())
         if (mmResp.ok) setModelMetrics(await mmResp.json())
+        if (tResp.ok) setTimelineData(await tResp.json())
       } catch { }
     }
     loadData()
@@ -330,7 +333,14 @@ export default function DashboardPage() {
       {/* Charts + Feed Row */}
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-8 space-y-6">
-          <ThreatTimeline />
+          <ThreatTimeline 
+            data={timelineData ? Object.entries(timelineData.hourly).map(([time, counts]: [string, any]) => ({
+              time,
+              threat_count: counts.phishing + counts.suspicious,
+              type_breakdown: { phishing: counts.phishing, malware: counts.suspicious }
+            })) : undefined}
+            totalThreats={timelineData?.total_last_24h}
+          />
           {/* Brand Impersonation */}
           {historyStats && historyStats.top_impersonated_brands.length > 0 && (
             <Card className="card-cyber p-5 space-y-4">

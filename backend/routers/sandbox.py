@@ -76,41 +76,15 @@ async def _unwind_redirects(url: str) -> list[str]:
 
 
 async def _run_apify_screenshot(url: str) -> dict:
-    """Take a screenshot using Apify Screenshot URL actor."""
-    if not APIFY_API_TOKEN:
-        return {"screenshot_url": None, "error": "APIFY_API_TOKEN not configured"}
+    """Take a screenshot using the robust visual_engine wrapper."""
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
-            # Start actor run
-            run_resp = await client.post(
-                APIFY_SCREENSHOT_URL,
-                params={"token": APIFY_API_TOKEN, "waitForFinish": 60},
-                json={"url": url, "viewportWidth": 1280, "viewportHeight": 800, "delay": 2000, "fullPage": False},
-            )
-            if run_resp.status_code not in (200, 201):
-                return {"screenshot_url": None, "error": f"Apify returned {run_resp.status_code}"}
-            run_data = run_resp.json()
-            run_id = run_data.get("data", {}).get("id", "")
-
-            if not run_id:
-                return {"screenshot_url": None, "error": "No run ID returned"}
-
-            # Poll for dataset
-            for _ in range(15):
-                await asyncio.sleep(3)
-                dataset_resp = await client.get(
-                    f"https://api.apify.com/v2/actor-runs/{run_id}/dataset/items",
-                    params={"token": APIFY_API_TOKEN},
-                )
-                if dataset_resp.status_code == 200:
-                    items = dataset_resp.json()
-                    if items:
-                        screenshot = items[0].get("screenshotUrl") or items[0].get("url")
-                        return {"screenshot_url": screenshot, "run_id": run_id}
-
-            return {"screenshot_url": None, "error": "Screenshot timed out"}
+        from models.visual_engine import take_screenshot
+        res = await take_screenshot(url)
+        if res and res.get("screenshot_path"):
+            return {"screenshot_url": res["screenshot_path"]}
+        return {"screenshot_url": None, "error": "Apify actor failed to capture screenshot"}
     except Exception as e:
-        logger.warning(f"[Sandbox] Apify screenshot failed: {e}")
+        logger.warning(f"[Sandbox] Apify screenshot wrapper failed: {e}")
         return {"screenshot_url": None, "error": str(e)[:80]}
 
 
