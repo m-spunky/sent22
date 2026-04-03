@@ -1,0 +1,248 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  padding: 0;
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+section {
+  scroll-margin-top: 80px;
+}
+
+/* ── CSS variables: dark (default) ─────────────────────────────────────────── */
+:root {
+  --bg-base:     #0a0e1a;
+  --bg-card:     #111827;
+  --bg-surface:  #070D14;
+  --bg-surface2: #0D1B2A;
+  --bg-sidebar:  #0d1117;
+  --fg:          #e2e8f0;
+  --fg-muted:    #64748b;
+  --fg-subtle:   #475569;
+  --border:      rgba(59, 130, 246, 0.12);
+  --border-soft: rgba(255, 255, 255, 0.05);
+  --border-med:  rgba(255, 255, 255, 0.10);
+  --input-bg:    rgba(59, 130, 246, 0.08);
+  --scrollbar:   #1e293b;
+  --overlay-light: rgba(255,255,255,0.03);
+  --overlay-med:   rgba(255,255,255,0.05);
+}
+
+/* ── CSS variables: light mode ─────────────────────────────────────────────── */
+.light {
+  --bg-base:     #eef2ff;
+  --bg-card:     #ffffff;
+  --bg-surface:  #f8faff;
+  --bg-surface2: #f1f5f9;
+  --bg-sidebar:  #f0f4ff;
+  --fg:          #0f172a;
+  --fg-muted:    #475569;
+  --fg-subtle:   #64748b;
+  --border:      rgba(59, 130, 246, 0.18);
+  --border-soft: rgba(30, 64, 175, 0.08);
+  --border-med:  rgba(30, 64, 175, 0.15);
+  --input-bg:    rgba(59, 130, 246, 0.06);
+  --scrollbar:   #cbd5e1;
+  --overlay-light: rgba(0,0,0,0.02);
+  --overlay-med:   rgba(0,0,0,0.04);
+}
+
+/* ── Tailwind @theme (static values — not theme-dependent) ─────────────────── */
+@theme {
+  --color-primary:             #3b82f6;
+  --color-primary-foreground:  #ffffff;
+  --color-secondary:           #1e3a5f;
+  --color-secondary-foreground:#e2e8f0;
+  --color-destructive:         #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-accent:              #f59e0b;
+  --color-accent-foreground:   #0a0e1a;
+  --color-ring:                #3b82f6;
+  --radius-lg:                 0.75rem;
+  --radius-md:                 0.5rem;
+  --radius-sm:                 0.375rem;
+
+  /* Theme-reactive colors via CSS variables */
+  --color-background:        var(--bg-base);
+  --color-foreground:        var(--fg);
+  --color-card:              var(--bg-card);
+  --color-card-foreground:   var(--fg);
+  --color-popover:           var(--bg-card);
+  --color-popover-foreground:var(--fg);
+  --color-muted:             var(--bg-surface2);
+  --color-muted-foreground:  var(--fg-muted);
+  --color-border:            var(--border);
+  --color-input:             var(--input-bg);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--fg);
+    font-family: 'JetBrains Mono', 'Inter', monospace;
+  }
+
+  /* Dark body gradient */
+  :root body {
+    background-image:
+      radial-gradient(ellipse at 70% 0%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 10% 90%, rgba(245, 158, 11, 0.04) 0%, transparent 40%);
+    background-attachment: fixed;
+  }
+
+  /* Light body gradient */
+  .light body {
+    background-image:
+      radial-gradient(ellipse at 70% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 10% 90%, rgba(245, 158, 11, 0.06) 0%, transparent 40%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* ── Hardcoded color overrides for light mode ───────────────────────────────
+   Tailwind arbitrary values like bg-[#0a0e1a] compile to specific CSS rules.
+   We override them here for .light to avoid touching every component.
+   ─────────────────────────────────────────────────────────────────────────── */
+.light .bg-\[\#0a0e1a\]  { background-color: #eef2ff !important; }
+.light .bg-\[\#0A0E1A\]  { background-color: #eef2ff !important; }
+.light .bg-\[\#111827\]  { background-color: #ffffff !important; }
+.light .bg-\[\#070D14\]  { background-color: #f8faff !important; }
+.light .bg-\[\#0D1B2A\]  { background-color: #f1f5f9 !important; }
+.light .bg-\[\#0D1B2A\]\/80 { background-color: rgba(241,245,249,0.9) !important; }
+.light .bg-\[\#0d1117\]  { background-color: #f0f4ff !important; }
+.light .bg-black\/40     { background-color: rgba(0,0,0,0.08) !important; }
+.light .bg-black\/50     { background-color: rgba(0,0,0,0.08) !important; }
+.light .bg-white\/2      { background-color: rgba(30,64,175,0.03) !important; }
+.light .bg-white\/3      { background-color: rgba(30,64,175,0.04) !important; }
+.light .bg-white\/5      { background-color: rgba(30,64,175,0.06) !important; }
+.light .bg-white\/8      { background-color: rgba(30,64,175,0.08) !important; }
+.light .bg-white\/10     { background-color: rgba(30,64,175,0.1) !important; }
+.light .bg-white\/20     { background-color: rgba(30,64,175,0.2) !important; }
+
+/* Borders in light mode */
+.light .border-white\/5  { border-color: rgba(30,64,175,0.08) !important; }
+.light .border-white\/8  { border-color: rgba(30,64,175,0.10) !important; }
+.light .border-white\/10 { border-color: rgba(30,64,175,0.14) !important; }
+.light .border-white\/20 { border-color: rgba(30,64,175,0.20) !important; }
+.light .border-white\/30 { border-color: rgba(30,64,175,0.28) !important; }
+
+/* Divide lines in light mode */
+.light .divide-white\/5 > * + * { border-color: rgba(30,64,175,0.08) !important; }
+
+/* Text overrides — slate-300/400 are too light on white backgrounds */
+.light .text-slate-300   { color: #1e293b !important; }
+.light .text-slate-400   { color: #334155 !important; }
+/* slate-500+ are already dark enough — leave them */
+
+/* Opacity tweaks for light mode */
+.light .opacity-30        { opacity: 0.6 !important; }
+.light .opacity-60        { opacity: 0.8 !important; }
+
+/* ── Utility classes ─────────────────────────────────────────────────────── */
+@layer utilities {
+  .card-cyber {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.05);
+    transition: all 0.25s ease;
+  }
+
+  .light .card-cyber {
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.08), 0 0 0 1px rgba(59, 130, 246, 0.08);
+  }
+
+  .card-cyber:hover {
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.08);
+  }
+
+  .light .card-cyber:hover {
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+  }
+
+  .glow-primary { box-shadow: 0 0 20px rgba(59, 130, 246, 0.35); }
+  .glow-amber   { box-shadow: 0 0 20px rgba(245, 158, 11, 0.35); }
+  .glow-red     { box-shadow: 0 0 20px rgba(239, 68, 68, 0.35); }
+  .glow-soft    { box-shadow: 0 0 15px rgba(59, 130, 246, 0.12); }
+
+  .border-cyber { border: 1px solid var(--border); }
+
+  .bg-cyber-gradient {
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-base) 100%);
+  }
+
+  .accent-glow  { text-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
+  .primary-glow { text-shadow: 0 0 12px rgba(59, 130, 246, 0.6); }
+
+  .animate-scan {
+    animation: scan 4s linear infinite;
+  }
+  @keyframes scan {
+    0%   { transform: translateY(-100%); opacity: 0; }
+    50%  { opacity: 0.4; }
+    100% { transform: translateY(1000%); opacity: 0; }
+  }
+
+  .animate-pulse-ring {
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse-ring {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(1.05); }
+  }
+
+  .bg-grid {
+    background-image: linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .light .bg-grid {
+    background-image: linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+  }
+
+  .verdict-critical  { color: #ef4444; }
+  .verdict-phishing  { color: #f97316; }
+  .verdict-suspicious{ color: #f59e0b; }
+  .verdict-safe      { color: #10b981; }
+
+  .font-mono-data {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Theme-aware sidebar background */
+  .sidebar-bg {
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-soft);
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--fg-subtle); }

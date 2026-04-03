@@ -1,0 +1,376 @@
+"""
+In-memory Threat Knowledge Graph using NetworkX.
+Pre-loaded with demo threat actors, campaigns, IOCs, and relationships.
+"""
+import networkx as nx
+from typing import Optional
+import random
+from datetime import datetime, timedelta
+
+# ── Demo Data ──────────────────────────────────────────────────────────────────
+
+THREAT_ACTORS = [
+    {
+        "id": "actor_fin7",
+        "name": "FIN7",
+        "aliases": ["Carbanak", "ALPHV Affiliate", "Navigator Group"],
+        "motivation": "Financial",
+        "country": "UA",
+        "first_seen": "2013-01-01",
+        "risk": "critical",
+        "mitre_techniques": ["T1566.001", "T1078", "T1056.003", "T1486", "T1583.001"],
+        "summary": "FIN7 is a financially motivated threat actor targeting retail, restaurant, and hospitality sectors through sophisticated spear-phishing campaigns. Known for deploying CARBANAK malware and conducting large-scale payment card theft operations.",
+    },
+    {
+        "id": "actor_lazarus",
+        "name": "Lazarus Group",
+        "aliases": ["HIDDEN COBRA", "APT38", "Zinc"],
+        "motivation": "Financial + Espionage",
+        "country": "KP",
+        "first_seen": "2009-01-01",
+        "risk": "critical",
+        "mitre_techniques": ["T1566.002", "T1195", "T1078", "T1133"],
+        "summary": "Lazarus Group is a North Korean state-sponsored APT known for targeting cryptocurrency exchanges, financial institutions, and government entities. Responsible for the WannaCry ransomware attack and multiple SWIFT banking heists.",
+    },
+    {
+        "id": "actor_apt28",
+        "name": "APT28",
+        "aliases": ["Fancy Bear", "Sofacy", "Strontium"],
+        "motivation": "Espionage",
+        "country": "RU",
+        "first_seen": "2007-01-01",
+        "risk": "critical",
+        "mitre_techniques": ["T1566.001", "T1059.003", "T1547.001"],
+        "summary": "APT28 is a Russian military intelligence (GRU) unit conducting cyber espionage operations against government, military, and political targets globally. Known for the 2016 DNC hack and various election interference campaigns.",
+    },
+    {
+        "id": "actor_scattered_spider",
+        "name": "Scattered Spider",
+        "aliases": ["0ktapus", "UNC3944", "Muddled Libra"],
+        "motivation": "Financial",
+        "country": "US/UK",
+        "first_seen": "2022-01-01",
+        "risk": "high",
+        "mitre_techniques": ["T1566.001", "T1621", "T1078.004"],
+        "summary": "Scattered Spider is an English-speaking threat actor known for sophisticated social engineering attacks targeting large enterprises. Conducted attacks on MGM Resorts and Caesars Entertainment using SIM swapping and help desk social engineering.",
+    },
+    {
+        "id": "actor_lapsus",
+        "name": "LAPSUS$",
+        "aliases": ["DEV-0537"],
+        "motivation": "Financial + Notoriety",
+        "country": "UK/BR",
+        "first_seen": "2021-01-01",
+        "risk": "high",
+        "mitre_techniques": ["T1078", "T1566.001", "T1534"],
+        "summary": "LAPSUS$ is a data extortion threat group that targets technology and telecom companies by recruiting insiders and conducting social engineering attacks. Victims include Microsoft, Okta, Samsung, and Nvidia.",
+    },
+]
+
+CAMPAIGNS = [
+    {
+        "id": "CAMP-2026-1847",
+        "name": "Operation Wire Phantom",
+        "actor": "FIN7",
+        "actor_id": "actor_fin7",
+        "status": "active",
+        "start_date": "2026-01-15",
+        "last_activity": "2026-03-25",
+        "target_sector": ["Finance", "Banking", "Retail"],
+        "ioc_count": 47,
+        "risk_level": "critical",
+        "description": "Targeted BEC campaign impersonating CFOs to authorize fraudulent wire transfers. Uses domain-spoofing and visual similarity to corporate SSO portals.",
+        "techniques": ["T1566.001", "T1078", "T1056.003"],
+        "iocs": {
+            "domains": ["auth-login.net", "secure-pay.ua", "cloud-verify.io", "corp-sso.net"],
+            "ips": ["192.168.45.21", "185.220.101.47", "45.142.212.100"],
+            "hashes": ["d41d8cd98f00b204e9800998ecf8427e", "5d41402abc4b2a76b9719d911017c592"],
+        },
+        "targets": ["Finance Department", "Accounts Payable", "C-Suite"],
+        "timeline": [
+            {"date": "2026-01-15", "event": "First domain registration detected"},
+            {"date": "2026-02-03", "event": "Initial phishing wave — 12 targets"},
+            {"date": "2026-03-01", "event": "Infrastructure expansion — 8 new domains"},
+            {"date": "2026-03-25", "event": "Latest phishing wave — ongoing"},
+        ],
+    },
+    {
+        "id": "CAMP-2026-0392",
+        "name": "Operation QR Mirage",
+        "actor": "Scattered Spider",
+        "actor_id": "actor_scattered_spider",
+        "status": "active",
+        "start_date": "2026-02-01",
+        "last_activity": "2026-03-20",
+        "target_sector": ["Technology", "Healthcare"],
+        "ioc_count": 23,
+        "risk_level": "high",
+        "description": "Multi-channel phishing using QR codes in physical media and digital communications. Redirects victims to HR portal clones for credential harvesting.",
+        "techniques": ["T1566.001", "T1621"],
+        "iocs": {
+            "domains": ["secure-verify.io", "hr-portal-auth.com", "employee-validate.net"],
+            "ips": ["134.209.76.233", "159.65.101.55"],
+            "hashes": [],
+        },
+        "targets": ["HR Department", "IT Team", "Remote Workers"],
+        "timeline": [
+            {"date": "2026-02-01", "event": "QR code phishing campaign initiated"},
+            {"date": "2026-02-20", "event": "3 credential compromises confirmed"},
+            {"date": "2026-03-20", "event": "Campaign expanded to digital channels"},
+        ],
+    },
+    {
+        "id": "CAMP-2025-8834",
+        "name": "Operation North Star II",
+        "actor": "Lazarus Group",
+        "actor_id": "actor_lazarus",
+        "status": "monitoring",
+        "start_date": "2025-11-10",
+        "last_activity": "2026-01-30",
+        "target_sector": ["Cryptocurrency", "Financial Services"],
+        "ioc_count": 89,
+        "risk_level": "critical",
+        "description": "Sophisticated crypto-theft campaign targeting DeFi protocols and cryptocurrency exchange employees. Uses job offer lures and fake interviews to deploy custom malware.",
+        "techniques": ["T1566.002", "T1195", "T1078"],
+        "iocs": {
+            "domains": ["jobs-web3.net", "defi-careers.io", "crypto-opportunity.com"],
+            "ips": ["175.45.176.0", "210.52.109.22"],
+            "hashes": ["098f6bcd4621d373cade4e832627b4f6"],
+        },
+        "targets": ["Crypto Exchanges", "DeFi Teams", "Blockchain Developers"],
+        "timeline": [
+            {"date": "2025-11-10", "event": "Initial reconnaissance phase"},
+            {"date": "2025-12-01", "event": "Spear-phishing via LinkedIn job offers"},
+            {"date": "2026-01-30", "event": "Activity reduced — possible infrastructure rotation"},
+        ],
+    },
+    {
+        "id": "CAMP-2025-5521",
+        "name": "Operation Phantom Vote",
+        "actor": "APT28",
+        "actor_id": "actor_apt28",
+        "status": "historical",
+        "start_date": "2025-09-01",
+        "last_activity": "2025-12-15",
+        "target_sector": ["Government", "Political Organizations"],
+        "ioc_count": 156,
+        "risk_level": "critical",
+        "description": "Election influence operation targeting campaign staff and election infrastructure through sophisticated spear-phishing and credential stuffing attacks.",
+        "techniques": ["T1566.001", "T1059.003", "T1547.001"],
+        "iocs": {
+            "domains": ["campaign-secure.net", "vote-verification.org", "election-alert.info"],
+            "ips": ["31.14.41.46", "185.87.151.44"],
+            "hashes": [],
+        },
+        "targets": ["Campaign Staff", "Election Officials", "Journalists"],
+        "timeline": [
+            {"date": "2025-09-01", "event": "Reconnaissance of targets identified"},
+            {"date": "2025-10-15", "event": "Spear-phishing wave — 47 targets"},
+            {"date": "2025-12-15", "event": "Campaign concluded post-election"},
+        ],
+    },
+    {
+        "id": "CAMP-2026-2201",
+        "name": "Operation Data Grab",
+        "actor": "LAPSUS$",
+        "actor_id": "actor_lapsus",
+        "status": "active",
+        "start_date": "2026-03-01",
+        "last_activity": "2026-03-26",
+        "target_sector": ["Technology", "Telecom"],
+        "ioc_count": 12,
+        "risk_level": "high",
+        "description": "Insider recruitment campaign targeting SaaS companies. Uses Telegram to recruit disgruntled employees and social engineers help desks for initial access.",
+        "techniques": ["T1078", "T1566.001", "T1534"],
+        "iocs": {
+            "domains": ["insider-jobs.cc", "security-bypass.top"],
+            "ips": ["45.33.32.156"],
+            "hashes": [],
+        },
+        "targets": ["SaaS Companies", "Telecom Providers", "IT Admins"],
+        "timeline": [
+            {"date": "2026-03-01", "event": "Initial recruitment posts on Telegram"},
+            {"date": "2026-03-20", "event": "First successful social engineering attempt"},
+            {"date": "2026-03-26", "event": "Active ongoing campaign"},
+        ],
+    },
+]
+
+DOMAINS = [
+    {"id": "dom_1", "fqdn": "auth-login.net", "campaign": "CAMP-2026-1847", "actor": "FIN7", "risk": "critical"},
+    {"id": "dom_2", "fqdn": "secure-pay.ua", "campaign": "CAMP-2026-1847", "actor": "FIN7", "risk": "critical"},
+    {"id": "dom_3", "fqdn": "cloud-verify.io", "campaign": "CAMP-2026-1847", "actor": "FIN7", "risk": "high"},
+    {"id": "dom_4", "fqdn": "corp-sso.net", "campaign": "CAMP-2026-1847", "actor": "FIN7", "risk": "high"},
+    {"id": "dom_5", "fqdn": "secure-verify.io", "campaign": "CAMP-2026-0392", "actor": "Scattered Spider", "risk": "high"},
+    {"id": "dom_6", "fqdn": "hr-portal-auth.com", "campaign": "CAMP-2026-0392", "actor": "Scattered Spider", "risk": "high"},
+    {"id": "dom_7", "fqdn": "jobs-web3.net", "campaign": "CAMP-2025-8834", "actor": "Lazarus Group", "risk": "critical"},
+    {"id": "dom_8", "fqdn": "defi-careers.io", "campaign": "CAMP-2025-8834", "actor": "Lazarus Group", "risk": "critical"},
+    {"id": "dom_9", "fqdn": "campaign-secure.net", "campaign": "CAMP-2025-5521", "actor": "APT28", "risk": "critical"},
+    {"id": "dom_10", "fqdn": "insider-jobs.cc", "campaign": "CAMP-2026-2201", "actor": "LAPSUS$", "risk": "high"},
+]
+
+IPS = [
+    {"id": "ip_1", "ip": "192.168.45.21", "asn": "AS48693", "country": "UA", "reputation": "malicious", "campaign": "CAMP-2026-1847"},
+    {"id": "ip_2", "ip": "185.220.101.47", "asn": "AS51396", "country": "DE", "reputation": "malicious", "campaign": "CAMP-2026-1847"},
+    {"id": "ip_3", "ip": "134.209.76.233", "asn": "AS14061", "country": "US", "reputation": "suspicious", "campaign": "CAMP-2026-0392"},
+    {"id": "ip_4", "ip": "175.45.176.0", "asn": "AS131228", "country": "KP", "reputation": "malicious", "campaign": "CAMP-2025-8834"},
+    {"id": "ip_5", "ip": "31.14.41.46", "asn": "AS48721", "country": "RU", "reputation": "malicious", "campaign": "CAMP-2025-5521"},
+]
+
+
+class ThreatKnowledgeGraph:
+    """In-memory threat knowledge graph."""
+
+    def __init__(self):
+        self.G = nx.DiGraph()
+        self._build_graph()
+
+    def _build_graph(self):
+        # Add threat actors
+        for actor in THREAT_ACTORS:
+            self.G.add_node(actor["id"], type="ThreatActor", **actor)
+
+        # Add campaigns
+        for camp in CAMPAIGNS:
+            self.G.add_node(camp["id"], type="Campaign", **camp)
+            # Link campaign to actor
+            if camp.get("actor_id"):
+                self.G.add_edge(camp["id"], camp["actor_id"], relationship="ATTRIBUTED_TO")
+
+        # Add domains
+        for dom in DOMAINS:
+            self.G.add_node(dom["id"], type="Domain", **dom)
+            # Link domain to campaign
+            for camp in CAMPAIGNS:
+                if dom["fqdn"] in camp.get("iocs", {}).get("domains", []):
+                    self.G.add_edge(camp["id"], dom["id"], relationship="USES_DOMAIN")
+
+        # Add IPs
+        for ip in IPS:
+            self.G.add_node(ip["id"], type="IPAddress", **ip)
+            # Link IP to campaign
+            for camp in CAMPAIGNS:
+                if ip["ip"] in camp.get("iocs", {}).get("ips", []):
+                    self.G.add_edge(camp["id"], ip["id"], relationship="USES_IP")
+
+    def get_graph_data(self, depth: int = 2, entity_type: Optional[str] = None) -> dict:
+        """Return graph data for D3.js visualization."""
+        nodes = []
+        edges = []
+
+        for node_id, data in self.G.nodes(data=True):
+            if entity_type and data.get("type", "").lower() != entity_type.lower():
+                continue
+            nodes.append({
+                "id": node_id,
+                "label": data.get("name") or data.get("fqdn") or data.get("ip") or node_id,
+                "type": data.get("type", "Unknown"),
+                "risk": data.get("risk", "medium"),
+                "data": {k: v for k, v in data.items() if k not in ("id",)},
+            })
+
+        for src, tgt, edata in self.G.edges(data=True):
+            edges.append({
+                "source": src,
+                "target": tgt,
+                "relationship": edata.get("relationship", "RELATED_TO"),
+            })
+
+        return {"nodes": nodes, "edges": edges, "total_nodes": len(nodes), "total_edges": len(edges)}
+
+    def get_actor(self, actor_id: str) -> Optional[dict]:
+        if actor_id in self.G.nodes:
+            return dict(self.G.nodes[actor_id])
+        # Try by name
+        for nid, data in self.G.nodes(data=True):
+            if data.get("type") == "ThreatActor" and data.get("name", "").lower() == actor_id.lower():
+                return dict(data)
+        return None
+
+    def get_campaign(self, campaign_id: str) -> Optional[dict]:
+        if campaign_id in self.G.nodes:
+            return dict(self.G.nodes[campaign_id])
+        return None
+
+    def correlate_iocs(self, domains: list = None, ips: list = None, hashes: list = None) -> dict:
+        """Find campaigns matching the provided IOCs."""
+        matches = []
+        related_campaigns = []
+        risk_elevation = 0.0
+
+        domains = domains or []
+        ips = ips or []
+        hashes = hashes or []
+
+        for camp in CAMPAIGNS:
+            camp_domains = camp.get("iocs", {}).get("domains", [])
+            camp_ips = camp.get("iocs", {}).get("ips", [])
+            camp_hashes = camp.get("iocs", {}).get("hashes", [])
+
+            domain_matches = [d for d in domains if d in camp_domains]
+            ip_matches = [i for i in ips if i in camp_ips]
+            hash_matches = [h for h in hashes if h in camp_hashes]
+
+            total_matches = len(domain_matches) + len(ip_matches) + len(hash_matches)
+            if total_matches > 0:
+                matches.append({
+                    "campaign_id": camp["id"],
+                    "campaign_name": camp["name"],
+                    "actor": camp["actor"],
+                    "matched_iocs": {
+                        "domains": domain_matches,
+                        "ips": ip_matches,
+                        "hashes": hash_matches,
+                    },
+                    "match_count": total_matches,
+                    "risk_level": camp["risk_level"],
+                })
+                related_campaigns.append(camp["id"])
+                if camp["risk_level"] == "critical":
+                    risk_elevation = max(risk_elevation, 0.20)
+                elif camp["risk_level"] == "high":
+                    risk_elevation = max(risk_elevation, 0.12)
+
+        return {
+            "matches": matches,
+            "related_campaigns": related_campaigns,
+            "risk_elevation": round(risk_elevation, 4),
+            "ioc_count_checked": len(domains) + len(ips) + len(hashes),
+        }
+
+    def get_all_campaigns(self) -> list:
+        return CAMPAIGNS
+
+    def get_all_actors(self) -> list:
+        return THREAT_ACTORS
+
+    def search(self, query: str) -> dict:
+        """Search graph nodes by text query."""
+        query_lower = query.lower()
+        results = {"actors": [], "campaigns": [], "domains": [], "ips": []}
+
+        for nid, data in self.G.nodes(data=True):
+            node_str = str(data).lower()
+            if query_lower in node_str:
+                t = data.get("type", "")
+                if t == "ThreatActor":
+                    results["actors"].append({"id": nid, "name": data.get("name"), "risk": data.get("risk")})
+                elif t == "Campaign":
+                    results["campaigns"].append({"id": nid, "name": data.get("name"), "actor": data.get("actor")})
+                elif t == "Domain":
+                    results["domains"].append({"id": nid, "fqdn": data.get("fqdn")})
+                elif t == "IPAddress":
+                    results["ips"].append({"id": nid, "ip": data.get("ip")})
+
+        return results
+
+
+# Singleton
+_graph_instance: Optional[ThreatKnowledgeGraph] = None
+
+
+def get_graph() -> ThreatKnowledgeGraph:
+    global _graph_instance
+    if _graph_instance is None:
+        _graph_instance = ThreatKnowledgeGraph()
+    return _graph_instance
