@@ -1,175 +1,5 @@
 [
   {
-    "event_id": "evt_31b17986",
-    "timestamp": "2026-03-30T00:23:18.122756Z",
-    "input_type": "email",
-    "input_preview": "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-    "verdict": "SUSPICIOUS",
-    "threat_score": 0.527,
-    "confidence": 0.753,
-    "inference_time_ms": 7659,
-    "brand_impersonated": "Unknown",
-    "threat_actor": "Unknown",
-    "urls_analyzed": [
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-      "http://www.desjardins.com/fr/votre_caisse/index.jsp",
-      "http://www.philsfeatheredfriends.com/sec/accesdesjardins/auportADPortail/ObtenirPageAccueil.doorigine_or/",
-      "https://accesd.desjardins.com/",
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif"
-    ],
-    "tactics": [
-      "Spoofing",
-      "Authority Impersonation"
-    ],
-    "feedback": null
-  },
-  {
-    "event_id": "evt_09bd0083",
-    "timestamp": "2026-03-30T00:23:27.994229Z",
-    "input_type": "email",
-    "input_preview": "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-    "verdict": "SUSPICIOUS",
-    "threat_score": 0.5269,
-    "confidence": 0.7529,
-    "inference_time_ms": 9505,
-    "brand_impersonated": "Unknown",
-    "threat_actor": "Unknown",
-    "urls_analyzed": [
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-      "http://www.desjardins.com/fr/votre_caisse/index.jsp",
-      "http://www.philsfeatheredfriends.com/sec/accesdesjardins/auportADPortail/ObtenirPageAccueil.doorigine_or/",
-      "https://accesd.desjardins.com/",
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif"
-    ],
-    "tactics": [
-      "Spoofing",
-      "Authority Impersonation"
-    ],
-    "feedback": null
-  },
-  {
-    "event_id": "evt_440db979",
-    "timestamp": "2026-03-30T00:23:36.137194Z",
-    "input_type": "email",
-    "input_preview": "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-    "verdict": "SUSPICIOUS",
-    "threat_score": 0.527,
-    "confidence": 0.753,
-    "inference_time_ms": 7788,
-    "brand_impersonated": "Unknown",
-    "threat_actor": "Unknown",
-    "urls_analyzed": [
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-      "http://www.desjardins.com/fr/votre_caisse/index.jsp",
-      "http://www.philsfeatheredfriends.com/sec/accesdesjardins/auportADPortail/ObtenirPageAccueil.doorigine_or/",
-      "https://accesd.desjardins.com/",
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif"
-    ],
-    "tactics": [
-      "Spoofing",
-      "Authority Impersonation",
-      "Suspicious Link"
-    ],
-    "feedback": null
-  },
-  {
-    "event_id": "evt_2cef26dc",
-    "timestamp": "2026-03-30T00:23:44.492916Z",
-    "input_type": "email",
-    "input_preview": "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-    "verdict": "SUSPICIOUS",
-    "threat_score": 0.5269,
-    "confidence": 0.7529,
-    "inference_time_ms": 8027,
-    "brand_impersonated": "Unknown",
-    "threat_actor": "Unknown",
-    "urls_analyzed": [
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-      "http://www.desjardins.com/fr/votre_caisse/index.jsp",
-      "http://www.philsfeatheredfriends.com/sec/accesdesjardins/auportADPortail/ObtenirPageAccueil.doorigine_or/",
-      "https://accesd.desjardins.com/",
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif"
-    ],
-    "tactics": [
-      "Spoofing",
-      "Authority Impersonation"
-    ],
-    "feedback": null
-  },
-  {
-    "event_id": "evt_7891d7f3",
-    "timestamp": "2026-03-30T00:23:52.864548Z",
-    "input_type": "email",
-    "input_preview": "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-    "verdict": "SUSPICIOUS",
-    "threat_score": 0.5269,
-    "confidence": 0.7529,
-    "inference_time_ms": 8043,
-    "brand_impersonated": "Unknown",
-    "threat_actor": "Unknown",
-    "urls_analyzed": [
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-      "http://www.desjardins.com/fr/votre_caisse/index.jsp",
-      "http://www.philsfeatheredfriends.com/sec/accesdesjardins/auportADPortail/ObtenirPageAccueil.doorigine_or/",
-      "https://accesd.desjardins.com/",
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif"
-    ],
-    "tactics": [
-      "Spoofing",
-      "Authority Impersonation"
-    ],
-    "feedback": null
-  },
-  {
-    "event_id": "evt_d32c18b6",
-    "timestamp": "2026-03-30T00:24:01.156854Z",
-    "input_type": "email",
-    "input_preview": "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-    "verdict": "SUSPICIOUS",
-    "threat_score": 0.5269,
-    "confidence": 0.7529,
-    "inference_time_ms": 7963,
-    "brand_impersonated": "Unknown",
-    "threat_actor": "Unknown",
-    "urls_analyzed": [
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-      "http://www.desjardins.com/fr/votre_caisse/index.jsp",
-      "http://www.philsfeatheredfriends.com/sec/accesdesjardins/auportADPortail/ObtenirPageAccueil.doorigine_or/",
-      "https://accesd.desjardins.com/",
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif"
-    ],
-    "tactics": [
-      "Spoofing",
-      "Authority Impersonation",
-      "Suspicious Link"
-    ],
-    "feedback": null
-  },
-  {
-    "event_id": "evt_a9026908",
-    "timestamp": "2026-03-30T00:24:11.245330Z",
-    "input_type": "email",
-    "input_preview": "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-    "verdict": "SUSPICIOUS",
-    "threat_score": 0.5268,
-    "confidence": 0.7529,
-    "inference_time_ms": 9728,
-    "brand_impersonated": "Unknown",
-    "threat_actor": "Unknown",
-    "urls_analyzed": [
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif",
-      "http://www.desjardins.com/fr/votre_caisse/index.jsp",
-      "http://www.philsfeatheredfriends.com/sec/accesdesjardins/auportADPortail/ObtenirPageAccueil.doorigine_or/",
-      "https://accesd.desjardins.com/",
-      "https://accesd.desjardins.com/public/0939/fr_CA_ACCESD/image/bandeau.gif"
-    ],
-    "tactics": [
-      "Spoofing",
-      "Authority Impersonation"
-    ],
-    "feedback": null
-  },
-  {
     "event_id": "evt_bbdadecf",
     "timestamp": "2026-03-30T00:24:19.797364Z",
     "input_type": "email",
@@ -23968,6 +23798,156 @@
       "Suspicious Link",
       "Reward Framing"
     ],
+    "feedback": null
+  },
+  {
+    "event_id": "evt_67467d7c",
+    "timestamp": "2026-04-03T17:33:32.443452Z",
+    "input_type": "email",
+    "input_preview": "From: [NAME] <[EMAIL]>\nSubject: Jarvislabs - Action Required: Your wallet balanc",
+    "verdict": "CRITICAL",
+    "threat_score": 0.9783,
+    "confidence": 0.9696,
+    "inference_time_ms": 15176,
+    "brand_impersonated": "Unknown",
+    "threat_actor": "Unknown",
+    "urls_analyzed": [],
+    "tactics": [
+      "Urgency",
+      "Fear Threat",
+      "Suspicious Link"
+    ],
+    "ai_generated_probability": 0.7017,
+    "feedback": null
+  },
+  {
+    "event_id": "evt_3ba73309",
+    "timestamp": "2026-04-03T17:33:32.545070Z",
+    "input_type": "email",
+    "input_preview": "From: [NAME] <[EMAIL]>\nSubject: Jarvislabs - Action Required: Your wallet balanc",
+    "verdict": "CRITICAL",
+    "threat_score": 0.9783,
+    "confidence": 0.9696,
+    "inference_time_ms": 15277,
+    "brand_impersonated": "Unknown",
+    "threat_actor": "Unknown",
+    "urls_analyzed": [],
+    "tactics": [
+      "Urgency",
+      "Fear Threat",
+      "Suspicious Link"
+    ],
+    "ai_generated_probability": 0.7017,
+    "feedback": null
+  },
+  {
+    "event_id": "evt_e10fc0b8",
+    "timestamp": "2026-04-03T17:33:36.127660Z",
+    "input_type": "email",
+    "input_preview": "https://bit.ly/AutomindsWorkshop",
+    "verdict": "SUSPICIOUS",
+    "threat_score": 0.3197,
+    "confidence": 0.6535,
+    "inference_time_ms": 18861,
+    "brand_impersonated": "Unknown",
+    "threat_actor": "Unknown",
+    "urls_analyzed": [
+      "https://bit.ly/AutomindsWorkshop",
+      "https://maps.google.com/?q=Hashu+Adwani+Memorial+Complex,+Collector%27s+Colony,+Chembur,+Mumbai,+Maharashtra+400074",
+      "https://www.facebook.com/ISAVESITOfficial/",
+      "https://www.instagram.com/isa_vesit",
+      "https://www.linkedin.com/company/isa-vesit"
+    ],
+    "tactics": [
+      "Urgency",
+      "Suspicious Link"
+    ],
+    "ai_generated_probability": 0.6913,
+    "feedback": "correct"
+  },
+  {
+    "event_id": "evt_50851950",
+    "timestamp": "2026-04-03T17:59:11.258072Z",
+    "input_type": "email",
+    "input_preview": "From: [NAME] <[EMAIL]>\nSubject: Hackathon Launch: The Gemma 4 Good Hackathon\n\nKa",
+    "verdict": "CRITICAL",
+    "threat_score": 0.961,
+    "confidence": 0.9613,
+    "inference_time_ms": 17085,
+    "brand_impersonated": "Unknown",
+    "threat_actor": "Unknown",
+    "urls_analyzed": [],
+    "tactics": [
+      "Reward Framing"
+    ],
+    "ai_generated_probability": 0.6515,
+    "feedback": null
+  },
+  {
+    "event_id": "evt_64debfa5",
+    "timestamp": "2026-04-03T17:59:17.706286Z",
+    "input_type": "email",
+    "input_preview": "https://forms.gle/pG5TSqBbN7ZYLFd99",
+    "verdict": "CRITICAL",
+    "threat_score": 0.9773,
+    "confidence": 0.9691,
+    "inference_time_ms": 23524,
+    "brand_impersonated": "Unknown",
+    "threat_actor": "Unknown",
+    "urls_analyzed": [
+      "https://forms.gle/pG5TSqBbN7ZYLFd99"
+    ],
+    "tactics": [
+      "Urgency",
+      "Suspicious Link",
+      "Reward Framing"
+    ],
+    "ai_generated_probability": 0.6313,
+    "feedback": null
+  },
+  {
+    "event_id": "evt_8e75b446",
+    "timestamp": "2026-04-03T17:59:20.459844Z",
+    "input_type": "email",
+    "input_preview": "https://greekturtle-prod.s3.amazonaws.com/f68cbc58-b347-460c-b84e-abd03534b075",
+    "verdict": "SAFE",
+    "threat_score": 0.0385,
+    "confidence": 0.5185,
+    "inference_time_ms": 26279,
+    "brand_impersonated": "Unknown",
+    "threat_actor": "Unknown",
+    "urls_analyzed": [
+      "https://greekturtle-prod.s3.amazonaws.com/f68cbc58-b347-460c-b84e-abd03534b075",
+      "https://greekturtle-prod.s3.amazonaws.com/bfcc3064-c04f-4f38-ab48-9a681192e383",
+      "https://greekturtle-prod.s3.amazonaws.com/71fe2f7c-d127-4513-8436-42ecfb6cc88a",
+      "https://app.joinsuperset.com/launchpad/jobs",
+      "https://app.joinsuperset.com/support/#/student/354"
+    ],
+    "tactics": [
+      "Suspicious Link",
+      "Spoofing"
+    ],
+    "ai_generated_probability": 0.6913,
+    "feedback": null
+  },
+  {
+    "event_id": "evt_7f292759",
+    "timestamp": "2026-04-03T18:15:27.655036Z",
+    "input_type": "email",
+    "input_preview": "From: [NAME] <[EMAIL]>\nSubject: Re: defaulter list 2\n\nAll the defaulter to submi",
+    "verdict": "CRITICAL",
+    "threat_score": 0.934,
+    "confidence": 0.9483,
+    "inference_time_ms": 19958,
+    "brand_impersonated": "Unknown",
+    "threat_actor": "Unknown",
+    "urls_analyzed": [],
+    "tactics": [
+      "Urgency",
+      "Authority Impersonation",
+      "Suspicious Link"
+    ],
+    "ai_generated_probability": 0.2863,
     "feedback": null
   }
 ]

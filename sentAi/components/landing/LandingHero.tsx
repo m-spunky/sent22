@@ -12,10 +12,10 @@ import { Badge } from "@/components/ui/badge"
 
 const PS_BADGES = [
   { label: "PS-01 · Phishing Detection", color: "border-blue-500/40 text-blue-400 bg-blue-500/10" },
-  { label: "PS-02 · Bot Detection", color: "border-purple-500/40 text-purple-400 bg-purple-500/10" },
-  { label: "PS-03 · Fraud Intelligence", color: "border-red-500/40 text-red-400 bg-red-500/10" },
-  { label: "PS-04 · Security Chatbot", color: "border-amber-500/40 text-amber-400 bg-amber-500/10" },
-  { label: "PS-05 · Dark Web Monitor", color: "border-emerald-500/40 text-emerald-400 bg-emerald-500/10" },
+  // { label: "PS-02 · Bot Detection", color: "border-purple-500/40 text-purple-400 bg-purple-500/10" },
+  // { label: "PS-03 · Fraud Intelligence", color: "border-red-500/40 text-red-400 bg-red-500/10" },
+  // { label: "PS-04 · Security Chatbot", color: "border-amber-500/40 text-amber-400 bg-amber-500/10" },
+  // { label: "PS-05 · Dark Web Monitor", color: "border-emerald-500/40 text-emerald-400 bg-emerald-500/10" },
 ]
 
 const QUICK_EXAMPLES = [
@@ -59,12 +59,12 @@ export function LandingHero() {
   }
 
   const verdictConfig = result ? {
-    "PHISHING":        { label: "Phishing Detected",   color: "text-red-400",    bg: "bg-red-500/10 border-red-500/30",     icon: ShieldAlert },
-    "CRITICAL":        { label: "Critical Threat",      color: "text-red-500",    bg: "bg-red-500/10 border-red-500/30",     icon: ShieldAlert },
-    "SUSPICIOUS":      { label: "Suspicious",           color: "text-amber-400",  bg: "bg-amber-500/10 border-amber-500/30", icon: AlertTriangle },
-    "SAFE":            { label: "Safe",                 color: "text-emerald-400",bg: "bg-emerald-500/10 border-emerald-500/30", icon: ShieldCheck },
-    "CONFIRMED_THREAT":{ label: "Confirmed Threat",     color: "text-red-400",    bg: "bg-red-500/10 border-red-500/30",     icon: ShieldAlert },
-    "CLEAN":           { label: "Clean",                color: "text-emerald-400",bg: "bg-emerald-500/10 border-emerald-500/30", icon: ShieldCheck },
+    "PHISHING": { label: "Phishing Detected", color: "text-red-400", bg: "bg-red-500/10 border-red-500/30", icon: ShieldAlert },
+    "CRITICAL": { label: "Critical Threat", color: "text-red-500", bg: "bg-red-500/10 border-red-500/30", icon: ShieldAlert },
+    "SUSPICIOUS": { label: "Suspicious", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30", icon: AlertTriangle },
+    "SAFE": { label: "Safe", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/30", icon: ShieldCheck },
+    "CONFIRMED_THREAT": { label: "Confirmed Threat", color: "text-red-400", bg: "bg-red-500/10 border-red-500/30", icon: ShieldAlert },
+    "CLEAN": { label: "Clean", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/30", icon: ShieldCheck },
   }[result.verdict] || { label: result.verdict, color: "text-slate-400", bg: "bg-card border-border", icon: ShieldCheck } : null
 
   return (
@@ -180,15 +180,15 @@ export function LandingHero() {
               <div className={cn(
                 "group border border-border/50 rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.03] bg-white/2 space-y-2",
                 f.color === "blue" ? "hover:border-blue-500/30 hover:bg-blue-500/5"
-                : f.color === "purple" ? "hover:border-purple-500/30 hover:bg-purple-500/5"
-                : f.color === "amber" ? "hover:border-amber-500/30 hover:bg-amber-500/5"
-                : "hover:border-emerald-500/30 hover:bg-emerald-500/5"
+                  : f.color === "purple" ? "hover:border-purple-500/30 hover:bg-purple-500/5"
+                    : f.color === "amber" ? "hover:border-amber-500/30 hover:bg-amber-500/5"
+                      : "hover:border-emerald-500/30 hover:bg-emerald-500/5"
               )}>
                 <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center border",
                   f.color === "blue" ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                  : f.color === "purple" ? "bg-purple-500/10 border-purple-500/20 text-purple-400"
-                  : f.color === "amber" ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                  : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                    : f.color === "purple" ? "bg-purple-500/10 border-purple-500/20 text-purple-400"
+                      : f.color === "amber" ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                        : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                 )}>
                   <f.icon className="h-4 w-4" />
                 </div>

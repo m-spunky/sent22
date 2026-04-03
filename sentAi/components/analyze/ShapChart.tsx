@@ -70,7 +70,7 @@ export function ShapChart({ shapValues, title = "Feature Attribution (SHAP)" }: 
         </div>
       </CardHeader>
       <CardContent className="p-4">
-        <ResponsiveContainer width="100%" height={Math.max(180, entries.length * 28)}>
+        <ResponsiveContainer width="100%" height={Math.max(180, entries.length * 28)} minWidth={1}>
           <BarChart
             data={entries}
             layout="vertical"

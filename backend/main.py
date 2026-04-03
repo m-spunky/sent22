@@ -40,17 +40,8 @@ async def lifespan(app: FastAPI):
             print(f"[SentinelAI] XGBoost URL classifier: {m.get('error')}")
     except Exception as e:
         print(f"[SentinelAI] ML classifier init: {e}")
-    # Pre-warm BERT phishing model (loads weights + runs evaluation)
-    try:
-        import asyncio as _asyncio
-        from models.bert_phishing_model import get_evaluation_metrics as bert_eval
-        m = bert_eval()  # triggers lazy load + evaluation
-        if "error" not in m:
-            print(f"[SentinelAI] BERT phishing model: F1={m.get('f1_score')}, AUC={m.get('roc_auc')}, Acc={m.get('accuracy')}")
-        else:
-            print(f"[SentinelAI] BERT model: {m.get('error')}")
-    except Exception as e:
-        print(f"[SentinelAI] BERT init: {e}")
+    # BERT model will be lazy-loaded on first inference
+    print("[SentinelAI] BERT model will be lazy-loaded on first inference to speed up startup.")
     print("[SentinelAI] All systems operational.")
 
     # Ingest OSINT feeds into knowledge graph (non-blocking)
