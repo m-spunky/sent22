@@ -19,8 +19,8 @@ export default function DashboardLayout({
       {/* Desktop Sidebar */}
       <div
         className={cn(
-          "hidden lg:block h-full transition-all duration-300 ease-in-out relative z-50",
-          collapsed ? "w-16" : "w-60"
+          "hidden lg:block h-full transition-all duration-300 ease-in-out relative z-50 shrink-0",
+          collapsed ? "w-16" : "w-64"
         )}
       >
         <Sidebar collapsed={collapsed} />

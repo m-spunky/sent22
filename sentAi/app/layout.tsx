@@ -1,11 +1,23 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Orbitron, Rajdhani, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const poppins = Poppins({
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+const orbitron = Orbitron({
+  weight: ["400", "500", "600", "700", "800", "900"],
   subsets: ["latin"],
-  variable: "--font-poppins",
+  variable: "--font-orbitron",
+});
+
+const rajdhani = Rajdhani({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-rajdhani",
+});
+
+const jetbrains = JetBrains_Mono({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -31,12 +43,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={poppins.variable} suppressHydrationWarning>
+    <html lang="en" className={`${orbitron.variable} ${rajdhani.variable} ${jetbrains.variable}`} suppressHydrationWarning>
       <head>
         {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-screen w-full selection:bg-blue-500/20 selection:text-blue-300 font-sans antialiased overflow-x-hidden">
+      <body className="min-h-screen w-full selection:bg-blue-500/20 selection:text-blue-300 font-sans antialiased overflow-x-hidden font-rajdhani">
         {children}
       </body>
     </html>
