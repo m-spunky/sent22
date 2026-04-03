@@ -55,6 +55,7 @@ def record_analysis(result: dict, input_type: str, input_preview: str = ""):
         "threat_actor": result.get("threat_intelligence", {}).get("threat_actor", "Unknown"),
         "urls_analyzed": result.get("urls_analyzed", []),
         "tactics": [t.get("name", "") for t in result.get("detected_tactics", [])[:3]],
+        "ai_generated_probability": result.get("llm_fingerprint", {}).get("ai_generated_probability", 0.0),
         "feedback": None,  # filled by feedback router
     }
     _history.append(entry)

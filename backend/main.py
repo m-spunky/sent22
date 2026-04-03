@@ -13,6 +13,7 @@ from config import FRONTEND_URL, PORT
 from routers import analyze, intelligence, chat, dashboard
 from routers import stream, behavioral, campaigns, reports
 from routers import history, feedback, sandbox, gmail, bulk, quishing
+from routers import deep_dive
 
 
 @asynccontextmanager
@@ -51,6 +52,26 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"[SentinelAI] BERT init: {e}")
     print("[SentinelAI] All systems operational.")
+
+    # Ingest OSINT feeds into knowledge graph (non-blocking)
+    import asyncio as _asyncio
+    try:
+        from intelligence.feed_ingester import ingest_all_feeds, feed_refresh_loop, get_feed_stats
+        await ingest_all_feeds()
+        stats = get_feed_stats()
+        print(
+            f"[SentinelAI] OSINT feeds ingested: "
+            f"ThreatFox={stats['threatfox_iocs']}, "
+            f"URLhaus={stats['urlhaus_urls']}, "
+            f"PhishTank={stats['phishtank_urls']}, "
+            f"merged={stats['total_ingested']}"
+        )
+        # Start background refresh loop (every 6 hours)
+        _asyncio.create_task(feed_refresh_loop())
+        print("[SentinelAI] OSINT feed refresh loop started (every 6h)")
+    except Exception as e:
+        print(f"[SentinelAI] OSINT feed init: {e}")
+
     yield
     print("[SentinelAI] Shutdown.")
 
@@ -82,6 +103,7 @@ app.add_middleware(
 # ── PS-01 Core ────────────────────────────────────────────────────────────────
 app.include_router(analyze.router)          # /api/v1/analyze/*, /api/v1/events/*, /api/v1/response/*
 app.include_router(sandbox.router)          # /api/v1/sandbox/*
+app.include_router(deep_dive.router)        # /api/v1/analyze/deep-dive
 app.include_router(quishing.router)         # /api/v1/quishing/*
 app.include_router(bulk.router)             # /api/v1/bulk/*
 app.include_router(gmail.router)            # /api/v1/gmail/*

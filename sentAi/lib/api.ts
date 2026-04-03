@@ -56,20 +56,56 @@ export interface KillChainStage {
   active: boolean
   color: string
   ps_coverage: string
+  phase?: string
+  ps?: string
+  indicators?: string[]
 }
 
 export interface KillChain {
-  stages: KillChainStage[]
+  stages?: KillChainStage[]
+  kill_chain_stages?: KillChainStage[]
   overall_risk: string
-  financial_impact: string
-  containment_steps: string[]
+  financial_impact?: string
+  containment_steps?: string[]
+  attack_vector?: string
+  active_stage_count?: number
+  estimated_impact?: {
+    level: string
+    financial_risk_usd: string
+  }
+}
+
+export interface LLMFingerprint {
+  ai_generated_probability: number
+  ai_confidence: number
+  is_likely_ai: boolean
+  detection_method: string
+  stylometric_scores: {
+    sentence_length_std?: number
+    type_token_ratio?: number
+    template_phrase_density?: number
+    punctuation_regularity?: number
+    coherence_overlap?: number
+  }
+  perplexity: {
+    variance: number
+    score: number
+  }
+  llm_assessment: {
+    is_ai: boolean
+    probability: number
+    reasoning: string
+    source: string
+  }
+  signals: string[]
+  verdict: "LIKELY_AI" | "POSSIBLY_AI" | "LIKELY_HUMAN" | "UNKNOWN"
 }
 
 export interface AnalysisResult {
   event_id: string
   status: string
   threat_score: number
-  verdict: "SAFE" | "SUSPICIOUS" | "PHISHING" | "CRITICAL"
+  verdict: "SAFE" | "SUSPICIOUS" | "PHISHING" | "CRITICAL" | "CONFIRMED_THREAT"
   confidence: number
   model_breakdown: ModelBreakdown
   detected_tactics: DetectedTactic[]
@@ -82,6 +118,24 @@ export interface AnalysisResult {
   dark_web_exposure?: DarkWebExposure
   kill_chain?: KillChain
   input_type?: "email" | "url" | "headers"
+  llm_fingerprint?: LLMFingerprint
+  sender_first_contact?: {
+    is_first_contact: boolean
+    first_seen?: string
+    domain?: string
+    risk_boost?: number
+    flag?: string
+  }
+  confidence_interval?: {
+    lower: number
+    upper: number
+    confidence_pct: number
+  }
+  inference_time_detail?: {
+    total_ms: number
+    label: string
+  }
+  so_what?: string
 }
 
 export interface ChatResponse {
@@ -149,6 +203,28 @@ export interface Campaign {
   timeline: { date: string; event: string }[]
 }
 
+export interface DeepDiveResult {
+  chain_id: string
+  source_event_id?: string
+  analyzed_at: string
+  chain_stages: {
+    stage: string
+    label: string
+    [key: string]: any
+  }[]
+  overall_risk: number
+  overall_verdict: string
+  chain_narrative: string
+  attachment_result?: {
+    filename: string
+    risk_score: number
+    risk_level: string
+    findings: string[]
+  }
+  execution_trace?: any
+  stage_count: number
+}
+
 // ── API Functions ─────────────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
@@ -174,6 +250,13 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   return apiFetch("/api/v1/analyze/url", {
     method: "POST",
     body: JSON.stringify({ url }),
+  })
+}
+
+export async function runDeepDive(url: string, eventId?: string): Promise<DeepDiveResult> {
+  return apiFetch("/api/v1/analyze/deep-dive", {
+    method: "POST",
+    body: JSON.stringify({ url, event_id: eventId }),
   })
 }
 

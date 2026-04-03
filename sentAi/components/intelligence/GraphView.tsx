@@ -131,9 +131,9 @@ export function GraphView({ onNodeSelect }: GraphViewProps) {
           .strength(0.3))
         .force("charge", d3.forceManyBody().strength(-200))
         .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collision", d3.forceCollide().radius((d: SimNode) => (NODE_RADII[d.type] || 10) + 8))
+        .force("collision", d3.forceCollide().radius(((d: any) => (NODE_RADII[d.type] || 10) + 8) as any))
 
-      simulationRef.current = simulation
+      simulationRef.current = simulation as any
 
       // Draw links
       const link = g.append("g").attr("class", "links")
@@ -240,7 +240,7 @@ export function GraphView({ onNodeSelect }: GraphViewProps) {
     if (!svgRef.current) return
     import("d3").then((d3) => {
       d3.select(svgRef.current!).transition().duration(300).call(
-        d3.zoom<SVGSVGElement, unknown>().scaleBy as unknown as (sel: d3.Selection<SVGSVGElement, unknown, null, undefined>, factor: number) => void,
+        d3.zoom<SVGSVGElement, unknown>().scaleBy as any,
         factor
       )
     })
@@ -250,7 +250,7 @@ export function GraphView({ onNodeSelect }: GraphViewProps) {
     if (!svgRef.current) return
     import("d3").then((d3) => {
       d3.select(svgRef.current!).transition().duration(500).call(
-        (d3.zoom<SVGSVGElement, unknown>().transform as unknown as (sel: d3.Selection<SVGSVGElement, unknown, null, undefined>, transform: d3.ZoomTransform) => void),
+        (d3.zoom<SVGSVGElement, unknown>().transform as any),
         d3.zoomIdentity
       )
     })

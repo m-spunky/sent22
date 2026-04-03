@@ -145,3 +145,85 @@ async def job_results(job_id: str):
     if job["status"] != "completed":
         raise HTTPException(status_code=202, detail=f"Job still {job['status']}. {job['completed']}/{job['total']} done.")
     return job
+
+
+@router.get("/{job_id}/cluster")
+async def job_cluster(job_id: str):
+    """
+    Cluster the results of a completed bulk job to uncover zero-day campaigns.
+    (Enhancement 5: Campaign Clustering)
+    """
+    job = _jobs.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Job {job_id} not found.")
+    if job["status"] != "completed":
+        raise HTTPException(status_code=400, detail="Cannot cluster an incomplete job.")
+
+    results = job.get("results", [])
+    if not results:
+        return {"clusters": []}
+
+    from models.campaign_clustering import cluster_events
+    from routers.analyze import _result_cache
+
+    events_to_cluster = []
+    
+    # Enrich the bulk results with data from the analyze cache
+    for res in results:
+        eid = res.get("event_id")
+        if not eid:
+            continue
+            
+        cached = _result_cache.get(eid)
+        if not cached:
+            continue
+            
+        # Extract features for clustering
+        event_data = {
+            "id": eid,
+            "timestamp": cached.get("timestamp"),
+            "content": res.get("input", ""),
+            "verdict": cached.get("verdict"),
+            "threat_score": cached.get("threat_score"),
+        }
+        
+        # Extract sender from headers if present
+        headers_flags = cached.get("model_breakdown", {}).get("header", {}).get("flags", [])
+        for f in headers_flags:
+            if "Sender:" in f:
+                event_data["sender_domain"] = f.replace("Sender:", "").strip()
+        
+        # Extract IOCs
+        iocs = []
+        iocs.extend(cached.get("threat_intelligence", {}).get("related_domains", []))
+        iocs.extend(cached.get("urls_analyzed", []))
+        event_data["iocs"] = iocs
+        
+        events_to_cluster.append(event_data)
+
+    clusters = cluster_events(events_to_cluster)
+    
+    # Enrich clusters with a summary
+    for c in clusters:
+        risk_scores = [e["threat_score"] for e in c["events"] if "threat_score" in e]
+        if risk_scores:
+            c["avg_risk_score"] = round(sum(risk_scores) / len(risk_scores), 3)
+            c["max_risk_score"] = round(max(risk_scores), 3)
+            
+        c["overall_verdict"] = (
+            "CRITICAL" if c.get("max_risk_score", 0) >= 0.85 else
+            "PHISHING" if c.get("max_risk_score", 0) >= 0.65 else
+            "SUSPICIOUS" if c.get("max_risk_score", 0) >= 0.35 else
+            "SAFE"
+        )
+
+    # Sort clusters by size (descending)
+    clusters.sort(key=lambda x: x["size"], reverse=True)
+
+    return {
+        "job_id": job_id,
+        "total_events_clustered": len(events_to_cluster),
+        "cluster_count": len(clusters),
+        "clusters": clusters
+    }
+

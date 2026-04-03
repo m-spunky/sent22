@@ -17,7 +17,8 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 PORT = int(os.getenv("PORT", 8001))
 
 # OpenRouter model IDs
-OPENROUTER_CHAT_MODEL = "openai/gpt-4o"
+# OPENROUTER_CHAT_MODEL = "openai/gpt-4o"
+OPENROUTER_CHAT_MODEL = "google/gemma-3-12b-it"
 OPENROUTER_FAST_MODEL = "google/gemma-3-12b-it"
 
 # Google OAuth2 (Gmail integration)

@@ -79,3 +79,13 @@ async def search_graph(request: SearchRequest):
         raise HTTPException(status_code=400, detail="Query must be at least 2 characters.")
     graph = get_graph()
     return graph.search(request.query)
+
+
+@router.get("/feeds")
+async def get_feed_stats():
+    """Return OSINT feed ingestion stats (ThreatFox, URLhaus, PhishTank)."""
+    try:
+        from intelligence.feed_ingester import get_feed_stats as _stats
+        return _stats()
+    except Exception as e:
+        return {"error": str(e), "last_refresh": None}

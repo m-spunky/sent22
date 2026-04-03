@@ -32,3 +32,6 @@ Thumbs.db
 
 
 backend/data/gmail_token.json
+backend/data/first_contact_cache.json
+backend/data/gmail_inbox_cache.json
+

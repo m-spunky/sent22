@@ -758,3 +758,551 @@ def _build_summary(results: list) -> dict:
         "verdict": verdict,
         "content_scanned_count": scanned,
     }
+
+
+# ── Simulated Execution Trace ─────────────────────────────────────────────────
+
+_KILL_CHAIN_STAGES = {
+    "initial_access": "Initial Access",
+    "execution": "Execution",
+    "persistence": "Persistence",
+    "defense_evasion": "Defense Evasion",
+    "command_control": "Command & Control",
+    "exfiltration": "Exfiltration",
+    "collection": "Collection",
+}
+
+
+def generate_execution_trace(filename: str, findings: list[str], data: bytes = None) -> dict:
+    """
+    Synthesize a simulated execution trace from static analysis findings.
+    Produces a step-by-step narrative showing what would happen if the file were opened.
+    No VM needed — built from pattern matching against real finding strings.
+    """
+    ext = _ext(filename)
+    steps = []
+    kill_chain_stages = set()
+    containment = []
+    time_to_compromise = "Unknown"
+
+    if not findings:
+        return {"has_trace": False, "file_type": ext, "steps": [], "kill_chain_stages": [],
+                "estimated_time_to_compromise": "N/A", "containment": []}
+
+    findings_text = " ".join(findings).lower()
+
+    # ── PDF execution trace ──────────────────────────────────────────────────
+    if ext == "pdf":
+        steps.append({
+            "step": 1, "action": "User opens PDF document",
+            "detail": f"Adobe Reader / browser PDF viewer opens '{filename}'",
+            "risk": "none"
+        })
+
+        if "javascript" in findings_text or "/js" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "JavaScript auto-executes",
+                "detail": "Embedded JavaScript payload runs automatically via /JS or /OpenAction trigger",
+                "risk": "critical"
+            })
+            kill_chain_stages.add("execution")
+            time_to_compromise = "< 5 seconds"
+
+        if "/openaction" in findings_text or "auto-trigger" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "OpenAction triggers on load",
+                "detail": "PDF /OpenAction or /AA (Additional Actions) fires before user interacts",
+                "risk": "high"
+            })
+            kill_chain_stages.add("initial_access")
+
+        if "/launch" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "External program launched",
+                "detail": "/Launch action spawns an external process (cmd.exe, powershell, or browser)",
+                "risk": "critical"
+            })
+            kill_chain_stages.add("execution")
+            time_to_compromise = "< 3 seconds"
+
+        if "embedded file" in findings_text or "hidden payload" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Embedded file extracted",
+                "detail": "Hidden payload inside PDF is extracted to disk via FileSpec/EmbeddedFile",
+                "risk": "critical"
+            })
+            kill_chain_stages.add("defense_evasion")
+
+        if "encrypted" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Encrypted content bypasses AV",
+                "detail": "PDF encryption prevents antivirus from scanning content statically",
+                "risk": "medium"
+            })
+            kill_chain_stages.add("defense_evasion")
+
+        # URL extraction from findings
+        url_findings = [f for f in findings if "url" in f.lower() or "domain" in f.lower()]
+        if url_findings:
+            steps.append({
+                "step": len(steps) + 1, "action": "External domain contacted",
+                "detail": f"Document loads content from external URL — {url_findings[0][:120]}",
+                "risk": "high"
+            })
+            kill_chain_stages.add("command_control")
+            containment.append("Block extracted domain(s) at firewall/DNS level")
+
+        if "phishing form" in findings_text or "acroform" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Interactive phishing form displayed",
+                "detail": "AcroForm presents fake login/credential harvesting form to user",
+                "risk": "critical"
+            })
+            kill_chain_stages.add("collection")
+            containment.append("Warn users: never enter credentials into PDF forms")
+
+    # ── Macro-enabled Office documents ────────────────────────────────────────
+    elif ext in {"docm", "xlsm", "pptm", "dotm", "xltm", "potm", "doc", "xls", "ppt"}:
+        steps.append({
+            "step": 1, "action": "User opens Office document",
+            "detail": f"Microsoft Word/Excel/PowerPoint opens '{filename}'",
+            "risk": "none"
+        })
+
+        if "macro" in findings_text or "vba" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Macro security prompt shown",
+                "detail": "Office displays 'Enable Content' / 'Enable Macros' security prompt",
+                "risk": "medium"
+            })
+            kill_chain_stages.add("initial_access")
+
+            if "auto" in findings_text and ("open" in findings_text or "execute" in findings_text):
+                steps.append({
+                    "step": len(steps) + 1, "action": "VBA macro auto-executes",
+                    "detail": "AutoOpen() / Document_Open() / Auto_Open() trigger fires immediately after user enables macros",
+                    "risk": "critical"
+                })
+                kill_chain_stages.add("execution")
+                time_to_compromise = "< 10 seconds"
+
+            if "shell" in findings_text or "wscript" in findings_text:
+                steps.append({
+                    "step": len(steps) + 1, "action": "System command executed",
+                    "detail": "VBA calls Shell() / WScript.Shell to execute OS commands",
+                    "risk": "critical"
+                })
+                kill_chain_stages.add("execution")
+
+            if "powershell" in findings_text or "cmd.exe" in findings_text:
+                steps.append({
+                    "step": len(steps) + 1, "action": "PowerShell/cmd.exe spawned",
+                    "detail": "Macro launches PowerShell with encoded command or cmd.exe to download payload",
+                    "risk": "critical"
+                })
+                kill_chain_stages.add("execution")
+                time_to_compromise = "< 15 seconds"
+                containment.append("Block PowerShell execution via AppLocker/WDAC policy")
+
+            if "download" in findings_text or "urldownload" in findings_text or "winhttprequest" in findings_text:
+                steps.append({
+                    "step": len(steps) + 1, "action": "Remote payload downloaded",
+                    "detail": "Macro uses URLDownloadToFile / WinHttpRequest to fetch stage-2 malware from C2 server",
+                    "risk": "critical"
+                })
+                kill_chain_stages.add("command_control")
+                containment.append("Block outbound connections to unknown domains")
+
+        if "external relationship" in findings_text or "template injection" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Remote template fetched",
+                "detail": "Document fetches macro-laden template from external server on open (template injection)",
+                "risk": "critical"
+            })
+            kill_chain_stages.add("execution")
+            kill_chain_stages.add("command_control")
+
+        if "activex" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "ActiveX control executes",
+                "detail": "Embedded ActiveX control runs arbitrary code without macro enable prompt",
+                "risk": "critical"
+            })
+            kill_chain_stages.add("execution")
+
+        if "executable embedded" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Embedded executable dropped",
+                "detail": "Hidden executable extracted from Office ZIP container to disk",
+                "risk": "critical"
+            })
+            kill_chain_stages.add("persistence")
+            containment.append("Scan endpoints for dropped executables")
+
+    # ── RTF documents ─────────────────────────────────────────────────────────
+    elif ext == "rtf":
+        steps.append({
+            "step": 1, "action": "User opens RTF document",
+            "detail": f"WordPad or Microsoft Word opens '{filename}'",
+            "risk": "none"
+        })
+
+        if "equation" in findings_text or "cve-2017-11882" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Equation Editor exploit triggers",
+                "detail": "CVE-2017-11882 exploit auto-executes via Equation.3 OLE object — no macro prompt needed",
+                "risk": "critical"
+            })
+            kill_chain_stages.update(["initial_access", "execution"])
+            time_to_compromise = "< 3 seconds"
+            containment.append("Patch Equation Editor (or disable OLE objects in registry)")
+
+        if "ole object" in findings_text or "objdata" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Embedded OLE object loaded",
+                "detail": "OLE object extracted and loaded by RTF parser — can execute arbitrary code",
+                "risk": "high"
+            })
+            kill_chain_stages.add("execution")
+
+        if "shellcode" in findings_text or "hex-encoded payload" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Shellcode executed",
+                "detail": "Hex-encoded shellcode in OLE object data decoded and executed in memory",
+                "risk": "critical"
+            })
+            kill_chain_stages.update(["execution", "defense_evasion"])
+
+    # ── LNK shortcuts ─────────────────────────────────────────────────────────
+    elif ext == "lnk":
+        steps.append({
+            "step": 1, "action": "User double-clicks shortcut",
+            "detail": f"Windows Shell Link '{filename}' activated by double-click",
+            "risk": "none"
+        })
+
+        for cmd in ["powershell", "cmd.exe", "wscript", "cscript", "mshta", "regsvr32", "rundll32", "certutil"]:
+            if cmd in findings_text:
+                steps.append({
+                    "step": len(steps) + 1, "action": f"{cmd} process spawned",
+                    "detail": f"LNK shortcut launches {cmd} with embedded command-line arguments",
+                    "risk": "critical"
+                })
+                kill_chain_stages.update(["initial_access", "execution"])
+                time_to_compromise = "< 2 seconds"
+                break
+
+        if "remote url" in findings_text or "download" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Payload downloaded from remote server",
+                "detail": "LNK command downloads malware from attacker-controlled URL",
+                "risk": "critical"
+            })
+            kill_chain_stages.add("command_control")
+            containment.append("Block URL from LNK target at proxy/firewall")
+
+        if "unc" in findings_text or "network path" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "UNC path accessed",
+                "detail": "LNK references \\\\attacker-share — Windows may auto-authenticate (NTLM relay)",
+                "risk": "high"
+            })
+            kill_chain_stages.add("collection")
+            containment.append("Block outbound SMB (port 445) to external IPs")
+
+    # ── Archive files ─────────────────────────────────────────────────────────
+    elif ext in {"zip", "rar", "7z", "tar", "gz", "jar", "cab"}:
+        steps.append({
+            "step": 1, "action": "User extracts archive",
+            "detail": f"Archive '{filename}' decompressed using built-in or third-party tool",
+            "risk": "none"
+        })
+
+        if "dangerous file" in findings_text or "executable" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Malicious file dropped",
+                "detail": "Executable or script file extracted from archive to disk",
+                "risk": "critical"
+            })
+            kill_chain_stages.update(["initial_access", "execution"])
+            time_to_compromise = "< 30 seconds"
+            containment.append("Quarantine extracted files immediately")
+
+        if "macro-enabled" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Macro-enabled Office file extracted",
+                "detail": "Archive contains .docm/.xlsm file — see Office macro execution trace",
+                "risk": "high"
+            })
+            kill_chain_stages.add("initial_access")
+
+        if "password-protected" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Password bypasses AV scanning",
+                "detail": "Password-protected archive cannot be scanned by automated AV — evasion technique",
+                "risk": "medium"
+            })
+            kill_chain_stages.add("defense_evasion")
+
+        if "zip-slip" in findings_text or "path traversal" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Path traversal exploit",
+                "detail": "Archive entry uses ../ path traversal to write files outside extraction directory",
+                "risk": "critical"
+            })
+            kill_chain_stages.add("persistence")
+
+    # ── Executable files ──────────────────────────────────────────────────────
+    elif ext in _CRITICAL_EXTS:
+        steps.append({
+            "step": 1, "action": "User executes file",
+            "detail": f"User double-clicks or runs '{filename}'",
+            "risk": "critical"
+        })
+        steps.append({
+            "step": 2, "action": "Malware gains code execution",
+            "detail": f"Executable .{ext} runs with user privileges — full system access",
+            "risk": "critical"
+        })
+        kill_chain_stages.update(["initial_access", "execution"])
+        time_to_compromise = "< 1 second"
+        containment.append("Block .exe/.bat/.ps1 in email gateway policy")
+        containment.append("Enable application whitelisting (AppLocker/WDAC)")
+
+    # ── SVG files ─────────────────────────────────────────────────────────────
+    elif ext in _SVG_EXTS:
+        steps.append({
+            "step": 1, "action": "SVG rendered in browser/viewer",
+            "detail": f"Browser or image viewer renders '{filename}' as scalable vector graphic",
+            "risk": "none"
+        })
+
+        if "script" in findings_text or "javascript" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Embedded JavaScript executes",
+                "detail": "SVG <script> element or javascript: URI runs code within browser context",
+                "risk": "critical"
+            })
+            kill_chain_stages.update(["initial_access", "execution"])
+            time_to_compromise = "< 2 seconds"
+
+        if "event handler" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Event handler triggers code",
+                "detail": "SVG onload/onclick/onmouseover handler auto-executes JavaScript",
+                "risk": "high"
+            })
+            kill_chain_stages.add("execution")
+
+        if "external url" in findings_text or "external" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "External resource loaded",
+                "detail": "SVG loads content from external server — SSRF, tracking, or phishing redirect",
+                "risk": "medium"
+            })
+            kill_chain_stages.add("command_control")
+
+        if "foreignobject" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "HTML content embedded",
+                "detail": "SVG <foreignObject> embeds full HTML — can render phishing forms within image",
+                "risk": "high"
+            })
+            kill_chain_stages.add("collection")
+
+    # ── Image files ───────────────────────────────────────────────────────────
+    elif ext in _IMAGE_EXTS:
+        steps.append({
+            "step": 1, "action": "Image opened in viewer",
+            "detail": f"Image viewer / browser renders '{filename}'",
+            "risk": "none"
+        })
+
+        if "polyglot" in findings_text or "pe/mz" in findings_text or "zip signature" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Polyglot payload detected",
+                "detail": "File is both a valid image AND an executable/archive — dual-purpose attack vector",
+                "risk": "critical"
+            })
+            kill_chain_stages.update(["defense_evasion", "execution"])
+
+        if "steganographic" in findings_text or "appended" in findings_text or "hidden data" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Hidden data extracted",
+                "detail": "Data appended after image EOF marker — requires secondary tool to extract payload",
+                "risk": "high"
+            })
+            kill_chain_stages.add("defense_evasion")
+
+        if "exif" in findings_text and ("url" in findings_text or "script" in findings_text):
+            steps.append({
+                "step": len(steps) + 1, "action": "EXIF metadata exploited",
+                "detail": "Image EXIF contains URL or script — tracking pixel or injection vector",
+                "risk": "medium"
+            })
+            kill_chain_stages.add("collection")
+
+    # ── Video files ───────────────────────────────────────────────────────────
+    elif ext in _VIDEO_EXTS:
+        steps.append({
+            "step": 1, "action": "Video opened in media player",
+            "detail": f"Media player opens '{filename}'",
+            "risk": "none"
+        })
+
+        if "polyglot" in findings_text or "executable disguised" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Polyglot attack vector",
+                "detail": "Video file is also executable — runs code if executed instead of played",
+                "risk": "critical"
+            })
+            kill_chain_stages.update(["defense_evasion", "execution"])
+
+        if "hidden archive" in findings_text:
+            steps.append({
+                "step": len(steps) + 1, "action": "Appended archive extracted",
+                "detail": "ZIP archive hidden at end of video file — contains additional payloads",
+                "risk": "high"
+            })
+            kill_chain_stages.add("defense_evasion")
+
+    # ── Generic fallback ──────────────────────────────────────────────────────
+    if not steps:
+        steps.append({
+            "step": 1, "action": "File accessed",
+            "detail": f"User opens or interacts with '{filename}'",
+            "risk": "none"
+        })
+        for finding in findings[:3]:
+            steps.append({
+                "step": len(steps) + 1, "action": "Security finding detected",
+                "detail": finding[:200],
+                "risk": "medium"
+            })
+
+    # Add common containment recommendations
+    if not containment:
+        containment.append("Verify sender authenticity before opening attachments")
+    containment.append("Report to security team for further investigation")
+
+    # Map kill chain stages to ordered list
+    stage_order = ["initial_access", "execution", "persistence", "defense_evasion",
+                    "command_control", "collection", "exfiltration"]
+    ordered_stages = [
+        _KILL_CHAIN_STAGES[s] for s in stage_order if s in kill_chain_stages
+    ]
+
+    return {
+        "has_trace": len(steps) > 1,
+        "file_type": ext,
+        "steps": steps,
+        "kill_chain_stages": ordered_stages,
+        "estimated_time_to_compromise": time_to_compromise,
+        "containment": containment,
+    }
+
+
+# ── Live URL probing for execution trace enrichment ──────────────────────────
+
+def _extract_urls_from_findings(findings: list[str]) -> list[str]:
+    """Extract URLs from static analysis finding strings."""
+    url_pattern = re.compile(r'https?://[^\s\'"<>]+', re.IGNORECASE)
+    urls = set()
+    for f in findings:
+        for match in url_pattern.findall(f):
+            # Clean trailing punctuation
+            clean = match.rstrip('.,;:)]}')
+            if len(clean) > 10:
+                urls.add(clean)
+    return list(urls)[:5]  # Limit to 5 URLs
+
+
+async def enrich_trace_with_live_probing(trace: dict, findings: list[str]) -> dict:
+    """
+    Enhance execution trace with LIVE URL probing.
+    For any URLs found in attachment findings, actively probe them
+    through the sandbox (redirect chain, SSL, credential forms).
+    Returns the trace dict with an added 'live_probes' key.
+    """
+    import asyncio
+
+    urls = _extract_urls_from_findings(findings)
+    if not urls:
+        trace["live_probes"] = []
+        return trace
+
+    live_probes = []
+
+    for url in urls:
+        probe = {
+            "url": url,
+            "probed": False,
+            "redirect_chain": [],
+            "ssl_valid": None,
+            "has_credential_form": False,
+            "page_title": None,
+            "findings": [],
+        }
+
+        try:
+            from routers.sandbox import _unwind_redirects, _get_ssl_info, _scrape_page_info
+            from urllib.parse import urlparse
+
+            hostname = urlparse(url).netloc
+
+            # Run sandbox checks in parallel
+            redirect_chain, ssl_info, page_info = await asyncio.gather(
+                _unwind_redirects(url),
+                _get_ssl_info(hostname),
+                _scrape_page_info(url),
+                return_exceptions=True,
+            )
+
+            probe["probed"] = True
+
+            # Process redirect chain
+            if isinstance(redirect_chain, list):
+                probe["redirect_chain"] = redirect_chain
+                if len(redirect_chain) > 1:
+                    probe["findings"].append(
+                        f"Redirects {len(redirect_chain)-1}× → final: {redirect_chain[-1][:80]}"
+                    )
+
+            # Process SSL
+            if isinstance(ssl_info, dict):
+                probe["ssl_valid"] = ssl_info.get("valid", False)
+                if not ssl_info.get("valid"):
+                    probe["findings"].append("SSL certificate invalid or self-signed")
+
+            # Process page info
+            if isinstance(page_info, dict):
+                probe["page_title"] = page_info.get("title", "")
+                if page_info.get("credential_harvesting_detected"):
+                    probe["has_credential_form"] = True
+                    probe["findings"].append(
+                        "LIVE: Credential harvesting form detected (login/password fields)"
+                    )
+                form_count = page_info.get("form_count", 0)
+                if form_count > 0:
+                    probe["findings"].append(f"Page contains {form_count} form(s)")
+
+        except Exception as e:
+            probe["error"] = str(e)[:80]
+            logger.warning(f"[ExecTrace] Live probe failed for {url[:60]}: {e}")
+
+        live_probes.append(probe)
+
+    # Inject live probe results into trace steps
+    for probe in live_probes:
+        if probe["probed"] and probe["findings"]:
+            step = {
+                "step": len(trace["steps"]) + 1,
+                "action": f"LIVE PROBE: {probe['url'][:60]}",
+                "detail": " | ".join(probe["findings"]),
+                "risk": "critical" if probe["has_credential_form"] else "high",
+                "live": True,
+            }
+            trace["steps"].append(step)
+
+    trace["live_probes"] = live_probes
+    return trace

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { ModelBreakdown } from "@/lib/api"
+import { ShapChart } from "@/components/analyze/ShapChart"
 
 type Tab = "nlp" | "url" | "visual" | "header"
 
@@ -231,15 +232,10 @@ export function EvidencePanel({ model_breakdown, urls_analyzed, verdict }: Evide
               </div>
             )}
 
-            {/* SHAP values */}
+            {/* SHAP values — Interactive Chart */}
             {shapEntries.length > 0 && (
               <div className="space-y-2">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Feature Importance (SHAP)</p>
-                <div className="space-y-2">
-                  {shapEntries.map(([feat, val]) => (
-                    <ShapBar key={feat} feature={feat} value={val} max={maxShap} />
-                  ))}
-                </div>
+                <ShapChart shapValues={url.shap_values} title="Feature Attribution (SHAP)" />
               </div>
             )}
           </div>

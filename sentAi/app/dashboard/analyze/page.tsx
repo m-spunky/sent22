@@ -18,8 +18,15 @@ import { ThreatScoreCard } from "@/components/analyze/ThreatScoreCard"
 import { TacticsCard } from "@/components/analyze/TacticsCard"
 import { IntelCard } from "@/components/analyze/IntelCard"
 import { ExplanationCard } from "@/components/analyze/ExplanationCard"
+import { SenderFirstContactCard } from "@/components/analyze/SenderFirstContactCard"
 import { EvidencePanel } from "@/components/analyze/EvidencePanel"
 import { TransparencyPanel } from "@/components/analyze/TransparencyPanel"
+import { LLMFingerprintCard } from "@/components/analyze/LLMFingerprintCard"
+import { ExecutionTraceCard } from "@/components/analyze/ExecutionTraceCard"
+import { EvidenceChainCard } from "@/components/analyze/EvidenceChainCard"
+import { DeepDivePanel } from "@/components/analyze/DeepDivePanel"
+import AnalysisSummaryBanner from "@/components/analyze/AnalysisSummaryBanner"
+import ColorCodedKillChain from "@/components/analyze/ColorCodedKillChain"
 import type { AnalysisResult } from "@/lib/api"
 import { generateReport, submitFeedback } from "@/lib/api"
 import { WS_BASE } from "@/lib/api"
@@ -306,7 +313,15 @@ function FeedbackBar({ eventId }: { eventId: string }) {
   )
 }
 
-export default function AnalyzePage() {
+export default function AnalyzePageWrapper() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center text-slate-500 uppercase tracking-widest text-xs">Loading Analyze Page...</div>}>
+      <AnalyzePage />
+    </React.Suspense>
+  )
+}
+
+function AnalyzePage() {
   const searchParams = useSearchParams()
   const [tab, setTab] = useState<InputTab>("email")
   const [inputText, setInputText] = useState("")
@@ -432,7 +447,7 @@ export default function AnalyzePage() {
         const data = await resp.json()
         // Use full_analysis if available, otherwise build a minimal result from attachment data
         if (data.full_analysis) {
-          res = { ...data.full_analysis, _attachment_analysis: data.attachment_analysis, _filename: data.filename }
+          res = { ...data.full_analysis, _attachment_analysis: data.attachment_analysis, _filename: data.filename, _execution_trace: data.execution_trace }
         } else {
           // Attachment-only result (no extractable text) — synthesize a minimal AnalysisResult shape
           res = {
@@ -451,6 +466,7 @@ export default function AnalyzePage() {
             urls_analyzed: [],
             _attachment_analysis: data.attachment_analysis,
             _filename: data.filename,
+            _execution_trace: data.execution_trace,
           } as any
         }
       } else if (tab === "qr" && qrFile) {
@@ -686,10 +702,11 @@ export default function AnalyzePage() {
             )}
           </AnimatePresence>
 
-          {/* Kill Chain */}
+          {/* Kill Chain — Color-Coded (QW-4) */}
           <AnimatePresence>
             {result?.kill_chain && state === "done" && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                <ColorCodedKillChain killChain={result.kill_chain} />
                 <KillChainCard killChain={result.kill_chain} />
               </motion.div>
             )}
@@ -709,6 +726,18 @@ export default function AnalyzePage() {
             {state === "done" && (gmailAttachments || (result as any)?._attachment_analysis) && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
                 <AttachmentRiskPanel analysis={gmailAttachments ?? (result as any)._attachment_analysis} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Execution Trace — simulated detonation */}
+          <AnimatePresence>
+            {state === "done" && (result as any)?._execution_trace?.has_trace && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+                <ExecutionTraceCard
+                  trace={(result as any)._execution_trace}
+                  filename={(result as any)?._filename}
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -738,6 +767,27 @@ export default function AnalyzePage() {
                   loading={state === "analyzing"}
                 />
 
+                {/* Summary Banner: So What + Confidence Interval + Speed + Powered By */}
+                {result && state === "done" && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }}>
+                    <AnalysisSummaryBanner result={result} />
+                  </motion.div>
+                )}
+
+                {/* Deep Dive Panel (only for URLs) */}
+                {result && state === "done" && tab === "url" && urlInput && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+                    <DeepDivePanel url={urlInput} eventId={result.event_id} />
+                  </motion.div>
+                )}
+
+                {/* Evidence Chain — glass box explainability */}
+                {result && state === "done" && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+                    <EvidenceChainCard result={result} />
+                  </motion.div>
+                )}
+
                 {/* Evidence Panel — per-analysis forensics (NLP phrases, URL SHAP, Screenshot, Headers) */}
                 {result && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -746,6 +796,20 @@ export default function AnalyzePage() {
                       urls_analyzed={result.urls_analyzed ?? []}
                       verdict={result.verdict}
                     />
+                  </motion.div>
+                )}
+
+                {/* LLM Fingerprint Detection */}
+                {result?.llm_fingerprint && result.llm_fingerprint.verdict !== "UNKNOWN" && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                    <LLMFingerprintCard fingerprint={result.llm_fingerprint} />
+                  </motion.div>
+                )}
+
+                {/* Sender First-Contact Alert */}
+                {result?.sender_first_contact?.is_first_contact && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
+                    <SenderFirstContactCard first_contact={result.sender_first_contact} />
                   </motion.div>
                 )}
 

@@ -8,6 +8,7 @@ import time
 import re
 import asyncio
 import logging
+import traceback
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
@@ -124,8 +125,31 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         "flags": header_result.get("flags", [])[:3],
     }, 2)
 
-    # ── LAYER 2: URL Analysis ─────────────────────────────────────────────────
-    url_result = await (score_url(primary_url, do_live_lookup=True) if primary_url else _empty_url())
+    # ── LAYER 2: URL Analysis + LLM Fingerprint (parallel) ─────────────────────
+    from models.llm_detector import detect_llm_fingerprint
+
+    async def _empty_llm():
+        return {
+            "ai_generated_probability": 0.0, "ai_confidence": 0.0, "is_likely_ai": False,
+            "detection_method": "skipped", "stylometric_scores": {}, "perplexity": {},
+            "llm_assessment": {}, "signals": [], "verdict": "UNKNOWN",
+        }
+
+    url_task = score_url(primary_url, do_live_lookup=True) if primary_url else _empty_url()
+    llm_task = detect_llm_fingerprint(content) if input_type == "email" else _empty_llm()
+
+    url_result, llm_fingerprint = await asyncio.gather(url_task, llm_task, return_exceptions=True)
+
+    if isinstance(url_result, Exception):
+        logger.warning(f"[Analyze] URL analysis failed: {url_result}")
+        url_result = {"score": 0.05, "confidence": 0.3, "top_features": [], "shap_values": {}}
+    if isinstance(llm_fingerprint, Exception):
+        logger.warning(f"[Analyze] LLM fingerprint failed: {llm_fingerprint}")
+        llm_fingerprint = {
+            "ai_generated_probability": 0.0, "ai_confidence": 0.0, "is_likely_ai": False,
+            "detection_method": "error", "stylometric_scores": {}, "perplexity": {},
+            "llm_assessment": {}, "signals": [], "verdict": "UNKNOWN",
+        }
 
     await _emit_layer_event(event_id, "url", {
         "score": url_result.get("score", 0),
@@ -133,6 +157,14 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         "blacklist_hit": url_result.get("features", {}).get("urlhaus_hit", False),
         "top_features": url_result.get("top_features", [])[:3],
     }, 3)
+
+    # Emit LLM fingerprint event
+    if input_type == "email":
+        await _emit_layer_event(event_id, "llm_fingerprint", {
+            "ai_probability": llm_fingerprint.get("ai_generated_probability", 0),
+            "verdict": llm_fingerprint.get("verdict", "UNKNOWN"),
+            "method": llm_fingerprint.get("detection_method", "unknown"),
+        }, 3)
 
     # ── LAYER 3: Visual Sandbox Analysis ─────────────────────────────────────
     run_visual = options.get("run_visual", False)  # default OFF — screenshot is slow (Apify)
@@ -168,12 +200,26 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         except Exception as e:
             logger.debug(f"[Analyze] IOC enrichment failed: {e}")
 
-    total_intel_boost = min(intel_result.get("risk_elevation", 0.0) + ioc_enrichment.get("risk_boost", 0.0), 0.35)
+    # ── LAYER 5: Sender First-Contact Tracking ────────────────────────────────
+    from models.first_contact import check_and_track_domain, get_sender_from_headers
+    
+    first_contact = {"is_first_contact": False}
+    if input_type == "email":
+        sender_domain = get_sender_from_headers(content)
+        if sender_domain:
+            first_contact = check_and_track_domain(sender_domain)
+    elif input_type == "url" and all_domains:
+        first_contact = check_and_track_domain(all_domains[0])
+        
+    first_contact_boost = first_contact.get("risk_boost", 0.0)
+
+    total_intel_boost = min(intel_result.get("risk_elevation", 0.0) + ioc_enrichment.get("risk_boost", 0.0) + first_contact_boost, 0.40)
 
     await _emit_layer_event(event_id, "intel", {
         "ioc_matches": len(ioc_enrichment.get("malicious_domains", [])),
         "risk_boost": total_intel_boost,
         "campaign_match": bool(intel_result.get("matches")),
+        "first_contact": first_contact.get("is_first_contact", False),
         "sources": ioc_enrichment.get("sources", []),
     }, 5)
 
@@ -199,6 +245,15 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         input_type=input_type,
         threat_intel_boost=total_intel_boost,
     )
+    
+    if first_contact.get("is_first_contact"):
+        fusion["detected_tactics"].append({
+            "name": "First Contact Domain",
+            "mitre_id": "T1583.001",
+            "description": "The sender domain has never been seen before or was registered/seen very recently, indicating a burner or zero-day infrastructure.",
+            "severity": "high",
+            "layer": "intel"
+        })
 
     fusion["model_breakdown"]["visual"]["matched_brand"] = visual_result.get("matched_brand", "Unknown")
     fusion["model_breakdown"]["visual"]["similarity"] = visual_result.get("similarity", 0.0)
@@ -246,6 +301,8 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         "model_breakdown": fusion["model_breakdown"],
         "detected_tactics": fusion["detected_tactics"],
         "threat_intelligence": threat_intel,
+        "sender_first_contact": first_contact,
+        "dark_web_exposure": dark_web_data,
         "explanation_narrative": explanation,
         "recommended_action": fusion["recommended_action"],
         "inference_time_ms": elapsed_ms,
@@ -255,6 +312,7 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         "dark_web_exposure": dark_web_data,
         "kill_chain": kill_chain,
         "input_type": input_type,
+        "llm_fingerprint": llm_fingerprint,
     }
 
     # ── Sentinel Fusion XGBoost (trained on 6,700 TREC-2007 emails) ───────────
@@ -285,6 +343,56 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
     except Exception as e:
         logger.warning(f"[Analyze] FusionXGB prediction failed: {e}")
         logger.info(f"[Analyze] {event_id}: verdict={fusion['verdict']}, score={fusion['threat_score']}, time={elapsed_ms}ms")
+
+    # ── QW-3: Confidence Interval ─────────────────────────────────────────────
+    score = result["threat_score"]
+    conf = result["confidence"]
+    # Interval width narrows as confidence increases
+    half_width = round((1 - conf) * 0.25, 4)
+    result["confidence_interval"] = {
+        "lower": round(max(0, score - half_width), 4),
+        "upper": round(min(1, score + half_width), 4),
+        "confidence_pct": round(conf * 100, 1),
+    }
+
+    # ── QW-2: Inference Time Breakdown ────────────────────────────────────────
+    result["inference_time_detail"] = {
+        "total_ms": elapsed_ms,
+        "label": (
+            "Lightning" if elapsed_ms < 500 else
+            "Fast" if elapsed_ms < 2000 else
+            "Moderate" if elapsed_ms < 5000 else
+            "Thorough"
+        ),
+    }
+
+    # ── QW-5: "So What?" One-Line Summary ─────────────────────────────────────
+    verdict = result["verdict"]
+    tactics = result.get("detected_tactics", [])
+    tactic_names = [t["name"] for t in tactics[:3]]
+    brand = result.get("model_breakdown", {}).get("visual", {}).get("matched_brand", "")
+
+    if verdict == "SAFE":
+        so_what = "This content appears legitimate — no phishing indicators detected."
+    elif verdict == "SUSPICIOUS":
+        if tactic_names:
+            so_what = f"Moderate risk: detected {', '.join(tactic_names)}. Manual review recommended."
+        else:
+            so_what = "Some anomalies found but no confirmed attack pattern. Flag for review."
+    elif verdict == "PHISHING":
+        attack = tactic_names[0] if tactic_names else "social engineering"
+        so_what = f"Likely phishing attempt using {attack}."
+        if brand and brand != "Unknown":
+            so_what += f" Impersonates {brand}."
+        so_what += " Block sender and quarantine."
+    else:  # CRITICAL
+        attack = tactic_names[0] if tactic_names else "multi-vector attack"
+        so_what = f"CRITICAL threat: {attack} confirmed."
+        if brand and brand != "Unknown":
+            so_what += f" {brand} brand impersonation."
+        so_what += " Immediate quarantine and incident response required."
+
+    result["so_what"] = so_what
 
     # Cache result
     _result_cache[event_id] = result
@@ -380,7 +488,10 @@ async def analyze_attachment_endpoint(file: UploadFile = File(...)):
     Runs Tier-2 content inspection + NLP analysis on extractable text.
     Returns attachment risk report merged with a full analysis result where possible.
     """
-    from models.attachment_analyzer import analyze_attachment_bytes, _ext
+    from models.attachment_analyzer import (
+        analyze_attachment_bytes, generate_execution_trace,
+        enrich_trace_with_live_probing, _ext,
+    )
 
     filename = file.filename or "unknown"
     mime_type = file.content_type or ""
@@ -394,6 +505,16 @@ async def analyze_attachment_endpoint(file: UploadFile = File(...)):
 
     # Tier-2 content inspection
     att_result = analyze_attachment_bytes(filename, mime_type, size_bytes, data)
+
+    # Generate execution trace from static findings
+    findings = att_result.get("findings", [])
+    execution_trace = generate_execution_trace(filename, findings, data)
+
+    # Enrich trace with LIVE URL probing (follows redirects, checks SSL, detects cred forms)
+    try:
+        execution_trace = await enrich_trace_with_live_probing(execution_trace, findings)
+    except Exception as e:
+        logger.warning(f"[AttachAnalyze] Live probe enrichment failed: {e}")
 
     # Try to extract text for NLP analysis
     extracted_text = _extract_text_from_bytes(data, filename, mime_type)
@@ -419,6 +540,7 @@ async def analyze_attachment_endpoint(file: UploadFile = File(...)):
         "mime_type": mime_type,
         "size_bytes": size_bytes,
         "attachment_analysis": att_result,
+        "execution_trace": execution_trace,
         "text_extracted": bool(extracted_text and len(extracted_text.strip()) >= 30),
         "extracted_length": len(extracted_text or ""),
         "full_analysis": analysis_result,
