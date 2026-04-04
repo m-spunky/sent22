@@ -273,3 +273,17 @@ async def enrich_iocs(domains: list[str], ips: list[str] = None, urls: list[str]
         "risk_boost": round(min(risk_boost, 0.30), 4),
         "sources": list(sources),
     }
+
+
+async def is_domain_malicious(domain: str) -> bool:
+    """
+    Fast boolean check — used by /analyze/quick for inbox badge scoring.
+    Checks URLhaus only (fastest, no key required). Returns True if domain
+    is confirmed malicious. Cached for 30 minutes per domain.
+    """
+    try:
+        result = await check_urlhaus_domain(domain)
+        return result.get("malicious", False)
+    except Exception:
+        return False
+

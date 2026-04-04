@@ -40,9 +40,18 @@ async def lifespan(app: FastAPI):
             print(f"[SentinelAI] XGBoost URL classifier: {m.get('error')}")
     except Exception as e:
         print(f"[SentinelAI] ML classifier init: {e}")
-    # BERT model will be lazy-loaded on first inference
-    print("[SentinelAI] BERT model will be lazy-loaded on first inference to speed up startup.")
+    # Pre-warm BERT in background so first analysis is instant
+    async def _warmup_bert():
+        try:
+            from models.nlp_engine import analyze_text
+            await analyze_text("Verify your account immediately to avoid suspension.", "email")
+            print("[SentinelAI] BERT model pre-warmed — first analysis will be fast.")
+        except Exception as e:
+            print(f"[SentinelAI] BERT warm-up failed (will lazy-load): {e}")
+    import asyncio as _asyncio2
+    _asyncio2.create_task(_warmup_bert())
     print("[SentinelAI] All systems operational.")
+
 
     # Ingest OSINT feeds into knowledge graph (non-blocking)
     import asyncio as _asyncio
@@ -85,6 +94,7 @@ app.add_middleware(
         "http://localhost:3002",
         "https://senti-ai-sepia.vercel.app",
         "https://*.vercel.app",
+        "chrome-extension://*",   # Gmail extension side panel + popup
     ],
     allow_credentials=True,
     allow_methods=["*"],

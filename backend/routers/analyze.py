@@ -29,6 +29,10 @@ router = APIRouter(prefix="/api/v1", tags=["analysis"])
 # In-memory result cache for event lookup
 _result_cache: dict[str, dict] = {}
 
+# Semaphore: allow max 2 full analyses concurrently (protects BERT from queue)
+# Quick-analyze and LLM-only are NOT gated by this semaphore (they're fast)
+_full_analysis_sem = asyncio.Semaphore(2)
+
 
 class EmailAnalysisRequest(BaseModel):
     content: str
@@ -82,6 +86,23 @@ async def _emit_layer_event(event_id: str, layer: str, data: dict, step: int, to
 
 async def _run_full_analysis(content: str, input_type: str, options: dict = None) -> dict:
     """Run the complete 5-layer multi-modal phishing detection pipeline."""
+    # Gate concurrent requests — at most 2 full pipelines run simultaneously.
+    # Excess requests wait here instead of hammering BERT with 5 parallel calls.
+    llm_only = (options or {}).get("llm_only", False)
+    sem = asyncio.Semaphore(4) if llm_only else _full_analysis_sem
+    async with sem:
+        try:
+            return await asyncio.wait_for(
+                _run_full_analysis_inner(content, input_type, options),
+                timeout=25.0  # hard cap — prevents hanging requests from blocking the queue
+            )
+        except asyncio.TimeoutError:
+            logger.warning("[Analyze] Full pipeline timed out after 25s — returning partial result")
+            raise HTTPException(status_code=504, detail="Analysis timed out. Try again or use quick scan.")
+
+
+async def _run_full_analysis_inner(content: str, input_type: str, options: dict = None) -> dict:
+    """Internal pipeline — called through semaphore gate."""
     start_time = time.time()
     event_id = f"evt_{uuid.uuid4().hex[:8]}"
     options = options or {}
@@ -95,6 +116,10 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
     # Emit: pipeline started
     await _emit_layer_event(event_id, "pipeline_start", {"status": "running", "input_type": input_type}, 0)
 
+    # ── Mode flag ─────────────────────────────────────────────────────────────
+    # llm_only=True: skip URL live lookup, headers, visual, IOC — NLP+LLM only (~1-2s)
+    llm_only = options.get("llm_only", False)
+
     # ── LAYER 1: NLP + Header (parallel) ─────────────────────────────────────
     async def _empty_url():
         return {"score": 0.05, "confidence": 0.3, "top_features": [], "shap_values": {}}
@@ -105,9 +130,38 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
     async def _empty_header():
         return {"score": 0.0, "confidence": 0.3, "flags": [], "spf_result": "unknown", "dkim_result": "unknown", "dmarc_result": "none"}
 
-    nlp_task = analyze_text(content, input_type)
-    header_task = _run_headers(content) if input_type == "email" else _empty_header()
+    nlp_task = asyncio.create_task(analyze_text(content, input_type, skip_heavy=True))
+    # Skip header analysis in llm_only mode (saves ~300ms DNS lookups)
+    _header_coro = (_run_headers(content) if not llm_only else _empty_header()) if input_type == "email" else _empty_header()
+    header_task = asyncio.create_task(_header_coro)
+    
+    # llm_only: skip live URL lookup (no whois/DNS/urlhaus crawl) — just static heuristics
+    _url_coro = score_url(primary_url, do_live_lookup=not llm_only) if primary_url else _empty_url()
+    url_task = asyncio.create_task(_url_coro)
+    
+    from models.llm_detector import detect_llm_fingerprint
+    async def _empty_llm():
+        return {
+            "ai_generated_probability": 0.0, "ai_confidence": 0.0, "is_likely_ai": False,
+            "detection_method": "skipped", "stylometric_scores": {}, "perplexity": {},
+            "llm_assessment": {}, "signals": [], "verdict": "UNKNOWN",
+        }
+    _llm_coro = detect_llm_fingerprint(content, skip_heavy=True) if input_type == "email" else _empty_llm()
+    llm_task = asyncio.create_task(_llm_coro)
+    
+    # Pre-warm IOC enrichment (Layer 4)
+    run_intel = options.get("run_threat_intel", True) and not llm_only
+    async def _safe_enrich():
+        return await enrich_iocs(domains=all_domains[:5]) if all_domains else {"malicious_domains": [], "malicious_ips": [], "risk_boost": 0.0, "sources": []}
+    intel_task = asyncio.create_task(_safe_enrich()) if run_intel else None
+    
+    # Pre-warm Dark Web Check (Layer 5)
+    async def _safe_dw():
+        from engines.credential_check import check_domain_exposure
+        return await check_domain_exposure(all_domains[0])
+    dw_task = asyncio.create_task(_safe_dw()) if all_domains else None
 
+    # Wait for layer 1 (Event emission still happens sequentially for the UI)
     nlp_result, header_result = await asyncio.gather(nlp_task, header_task, return_exceptions=False)
 
     await _emit_layer_event(event_id, "nlp", {
@@ -123,20 +177,10 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         "dkim": header_result.get("dkim_result", "unknown"),
         "dmarc": header_result.get("dmarc_result", "none"),
         "flags": header_result.get("flags", [])[:3],
+        "skipped": llm_only,
     }, 2)
 
     # ── LAYER 2: URL Analysis + LLM Fingerprint (parallel) ─────────────────────
-    from models.llm_detector import detect_llm_fingerprint
-
-    async def _empty_llm():
-        return {
-            "ai_generated_probability": 0.0, "ai_confidence": 0.0, "is_likely_ai": False,
-            "detection_method": "skipped", "stylometric_scores": {}, "perplexity": {},
-            "llm_assessment": {}, "signals": [], "verdict": "UNKNOWN",
-        }
-
-    url_task = score_url(primary_url, do_live_lookup=True) if primary_url else _empty_url()
-    llm_task = detect_llm_fingerprint(content) if input_type == "email" else _empty_llm()
 
     url_result, llm_fingerprint = await asyncio.gather(url_task, llm_task, return_exceptions=True)
 
@@ -188,7 +232,7 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
     }, 4)
 
     # ── LAYER 4: Threat Intelligence + IOC Enrichment ─────────────────────────
-    run_intel = options.get("run_threat_intel", True)
+    # Skip in llm_only mode — IOC feeds add 500ms–1s with external HTTP calls
     intel_result = {"matches": [], "related_campaigns": [], "risk_elevation": 0.0}
     ioc_enrichment = {"malicious_domains": [], "malicious_ips": [], "risk_boost": 0.0, "sources": []}
 
@@ -196,9 +240,10 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         graph = get_graph()
         intel_result = graph.correlate_iocs(domains=all_domains)
         try:
-            ioc_enrichment = await enrich_iocs(domains=all_domains[:5])
+            if intel_task:
+                ioc_enrichment = await asyncio.wait_for(intel_task, timeout=3.0)
         except Exception as e:
-            logger.debug(f"[Analyze] IOC enrichment failed: {e}")
+            logger.debug(f"[Analyze] IOC enrichment failed/timed out: {e}")
 
     # ── LAYER 5: Sender First-Contact Tracking ────────────────────────────────
     from models.first_contact import check_and_track_domain, get_sender_from_headers
@@ -223,15 +268,11 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         "sources": ioc_enrichment.get("sources", []),
     }, 5)
 
-    # ── LAYER 5: Dark Web Exposure Check (PS-05) ───────────────────────────────
+    # ── LAYER 6: Dark Web Exposure Check (PS-05) ───────────────────────────────
     dark_web_data = {"breach_count": 0, "dark_web_risk": "UNKNOWN"}
-    if all_domains:
+    if all_domains and dw_task:
         try:
-            from engines.credential_check import check_domain_exposure
-            dark_web_data = await asyncio.wait_for(
-                check_domain_exposure(all_domains[0]),
-                timeout=5.0
-            )
+            dark_web_data = await asyncio.wait_for(dw_task, timeout=2.0)
         except Exception:
             pass
 
@@ -318,7 +359,10 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
     # ── Sentinel Fusion XGBoost (trained on 6,700 TREC-2007 emails) ───────────
     try:
         from models.sentinel_fusion_model import predict_fusion
-        ml_prob = predict_fusion(result)
+        # Legacy XGBoost is causing massive false positives for transactional emails
+        # (overriding 0.25 SAFE scores with 0.98 CRITICAL). We will rely entirely on our modern Fusion Engine.
+        ml_prob = -1.0
+
         if ml_prob >= 0:
             result["threat_score"] = ml_prob
             # Re-derive verdict from calibrated score
@@ -400,11 +444,19 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         oldest = list(_result_cache.keys())[0]
         del _result_cache[oldest]
 
-    # Record to history
+    # Record to history — pass source metadata if provided in options
     try:
         from routers.history import record_analysis
         preview = (primary_url or content)[:80]
-        record_analysis(result, input_type, preview)
+        record_analysis(
+            result, input_type, preview,
+            source=options.get("source", "platform"),
+            gmail_message_id=options.get("gmail_message_id"),
+            gmail_subject=options.get("gmail_subject"),
+            gmail_sender=options.get("gmail_sender"),
+            urls_extracted=urls[:10],
+            attachments_scanned=options.get("attachments_scanned", []),
+        )
     except Exception:
         pass
 
@@ -432,6 +484,245 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
         pass
 
     return result
+
+
+# ── Quick analysis (for extension inbox badge — targets < 800ms) ──────────────
+
+class QuickAnalysisRequest(BaseModel):
+    subject: str = ""
+    sender: str = ""
+    snippet: str = ""
+    gmail_message_id: Optional[str] = None
+
+
+@router.post("/analyze/quick")
+async def analyze_quick(request: QuickAnalysisRequest):
+    """
+    Lightweight quick analysis for Gmail extension inbox score badge.
+    Uses sender domain + subject + snippet only.
+    No BERT, no LLM — targeting < 800ms response time.
+    Calibrated to avoid false-positives on legitimate transactional emails.
+    """
+    start = time.time()
+
+    subject = request.subject or ""
+    sender  = request.sender or ""
+    snippet = request.snippet or ""
+    text_lower = f"{subject} {snippet}".lower()
+
+    score = 0.0
+    flags = []
+
+    # ── Trusted domain allowlist ──────────────────────────────────────────────
+    # Emails from these domains get a hard cap on the quick score.
+    # They still go through heuristics, but max score is 0.25 (LOW_RISK floor).
+    TRUSTED_DOMAINS = {
+        # Email / notification providers
+        "google.com", "gmail.com", "googlemail.com",
+        "microsoft.com", "outlook.com", "live.com", "hotmail.com",
+        "apple.com", "icloud.com",
+        "amazon.com", "amazon.in", "amazon.co.uk",
+        "linkedin.com", "twitter.com", "x.com", "facebook.com", "instagram.com",
+        "github.com", "gitlab.com", "atlassian.com", "jira.atlassian.com",
+        "slack.com", "zoom.us", "notion.so", "figma.com",
+        "stripe.com", "razorpay.com", "paypal.com",
+        "kaggle.com", "coursera.org", "udemy.com",
+        "devfolio.co", "devpost.com", "hackerrank.com", "hackerearth.com",
+        "jarvislabs.ai", "huggingface.co", "openai.com", "anthropic.com",
+        "vercel.com", "netlify.com", "heroku.com", "render.com", "railway.app",
+        "medium.com", "substack.com", "mailchimp.com",
+        "youtube.com", "netflix.com", "spotify.com",
+        "noreply.github.com", "notifications.github.com",
+        # Indian edu/gov
+        "gov.in", "nic.in", "ac.in", "edu.in",
+    }
+
+    # OTP / transactional signals — these are SAFE patterns, not phishing
+    OTP_PATTERNS = [
+        r"\b\d{4,8}\b.*(?:code|otp|pin|token)",
+        r"(?:verification|otp|one.?time|2fa)\b.*\b\d{4,8}\b",
+        r"\bverification code\b",
+        r"\bconfirm.*email\b",
+        r"\bwelcome to\b",
+        r"\bthank you for.*(?:signing|register|purchas|order)\b",
+        r"\bpassword reset\b",
+        r"\bunsubscribe\b",
+        # Notification / order patterns common in legit emails
+        r"\byour order\b",
+        r"\bhas been (?:shipped|delivered|received|confirmed|approved|placed)\b",
+        r"\bmeeting (?:invite|invitation|request|scheduled)\b",
+        r"\bappointment\b",
+        r"\binvoice #?\d+\b",
+        r"\breceipt for\b",
+        r"\bpull request\b",
+        r"\baction required\b.*\bgithub\b",
+        r"\bnew message\b",
+        r"\bshared.*with you\b",
+        r"\byou(?:'ve| have) been invited\b",
+        r"\bsubscription (?:renewed|renewal|receipt)\b",
+    ]
+
+    # ── Extract sender domain ─────────────────────────────────────────────────
+    sender_domain = ""
+    if "@" in sender:
+        sender_domain = sender.split("@")[-1].strip().rstrip(">").lower()
+
+    # Check if sender is trusted (exact match OR subdomain of trusted domain)
+    is_trusted = any(
+        sender_domain == td or sender_domain.endswith("." + td)
+        for td in TRUSTED_DOMAINS
+    ) if sender_domain else False
+
+    # Check if email looks like legitimate transactional / OTP
+    is_transactional = any(re.search(p, text_lower) for p in OTP_PATTERNS)
+
+    # ── Heuristic NLP scan ────────────────────────────────────────────────────
+    # Only strong urgency signals (not "verify" alone — too common in legit email)
+    # Removed: "limited time offer" (marketing), "action required immediately" (common legit)
+    strong_urgency = [
+        "your account has been suspended", "account locked",
+        "unauthorized access detected",
+        "your account will be closed", "click here to avoid",
+        "you have won", "claim your prize", "wire transfer", "money transfer",
+        "your account has been compromised", "login attempt blocked",
+    ]
+    medium_urgency = [
+        "urgent", "immediately", "expire", "24 hours", "48 hours",
+        "act now", "final notice", "last chance",
+    ]
+    # Credential harvesting — specific phrases only, not common billing terms
+    credential_terms = [
+        "social security", "credit card number", "bank account number",
+        "enter your password", "confirm your password",
+        "verify your bank", "provide your ssn",
+    ]
+
+    strong_hits  = sum(1 for t in strong_urgency  if t in text_lower)
+    medium_hits  = sum(1 for t in medium_urgency  if t in text_lower)
+    cred_hits    = sum(1 for t in credential_terms if t in text_lower)
+
+    if strong_hits >= 1:
+        score += 0.30
+        flags.append("Strong Urgency Language")
+    elif medium_hits >= 3:
+        score += 0.20
+        flags.append("Multiple Urgency Signals")
+    elif medium_hits >= 1 and not is_transactional:
+        score += 0.08
+
+    if cred_hits >= 2:
+        score += 0.25
+        flags.append("Credential Harvesting Language")
+    elif cred_hits == 1:
+        score += 0.07  # reduced — single credential term is weak signal alone
+
+    # Transactional / OTP emails get a stronger discount
+    if is_transactional:
+        score = max(0.0, score - 0.20)
+
+    # ── Sender domain checks ──────────────────────────────────────────────────
+    if sender_domain:
+        # High-risk TLDs
+        risky_tlds = {".xyz", ".tk", ".ml", ".ga", ".cf", ".gq", ".top",
+                      ".club", ".work", ".click", ".fit", ".date", ".review", ".stream"}
+        if any(sender_domain.endswith(t) for t in risky_tlds) and not is_trusted:
+            score += 0.25
+            flags.append(f"High-Risk TLD: {sender_domain}")
+
+        # Brand impersonation — only flag if NOT the actual brand's domain
+        brands = {
+            "paypal": {"paypal.com", "paypal.co.uk"},
+            "amazon": {"amazon.com", "amazon.in", "amazon.co.uk", "amazon.de"},
+            "microsoft": {"microsoft.com", "outlook.com", "live.com", "hotmail.com"},
+            "apple": {"apple.com", "icloud.com"},
+            "google": {"google.com", "gmail.com", "googlemail.com"},
+            "netflix": {"netflix.com"},
+            "chase": {"chase.com"},
+            "wellsfargo": {"wellsfargo.com"},
+            "bankofamerica": {"bankofamerica.com"},
+            "irs": {"irs.gov"},
+            "fedex": {"fedex.com"},
+            "dhl": {"dhl.com"},
+            "ups": {"ups.com"},
+        }
+        for brand, legit_set in brands.items():
+            if brand in sender_domain and sender_domain not in legit_set:
+                score += 0.35
+                flags.append(f"Brand Impersonation: {brand.capitalize()}")
+                break
+
+        # Obfuscation patterns
+        obf_patterns = [
+            (r"paypa1|payp4l|p4ypal", "PayPal Obfuscation"),
+            (r"amaz0n|amaz[0o]n-\w", "Amazon Obfuscation"),
+            (r"micros0ft|mlcrosoft|micosoft", "Microsoft Obfuscation"),
+            (r"g00gle|go0gle", "Google Obfuscation"),
+        ]
+        for pattern, label in obf_patterns:
+            if re.search(pattern, sender_domain):
+                score += 0.40
+                flags.append(label)
+                break
+
+        # First-contact: only penalise if NOT trusted AND NOT transactional
+        if not is_trusted and not is_transactional:
+            try:
+                from models.first_contact import check_and_track_domain
+                fc = check_and_track_domain(sender_domain)
+                if fc.get("is_first_contact"):
+                    score += 0.08   # reduced from 0.15 — first-contact ≠ phishing
+                    flags.append("First-Contact Domain")
+            except Exception:
+                pass
+
+        # URLhaus known-malicious domain (authoritative)
+        try:
+            from intelligence.ioc_feeds import is_domain_malicious
+            if await asyncio.wait_for(is_domain_malicious(sender_domain), timeout=0.8):
+                score += 0.45
+                flags.append("Known Malicious Domain (URLhaus)")
+        except Exception:
+            pass
+
+    # ── Subject pattern checks ────────────────────────────────────────────────
+    subj_lower = subject.lower()
+    if re.search(r"invoice|wire transfer|urgent payment|account closure", subj_lower):
+        if not is_transactional:
+            score += 0.10
+            flags.append("Financial Lure Subject")
+
+    # ── Trusted sender cap ────────────────────────────────────────────────────
+    # A trusted domain can at most be LOW_RISK (0.25) from the quick scan.
+    # The full pipeline will refine if needed.
+    if is_trusted:
+        score = min(score, 0.25)
+
+    score = round(min(score, 0.99), 3)
+
+    # Verdict thresholds — tightened to reduce false positives
+    if score >= 0.65:
+        verdict = "PHISHING"
+    elif score >= 0.35:
+        verdict = "SUSPICIOUS"
+    elif score >= 0.15:
+        verdict = "LOW_RISK"
+    else:
+        verdict = "SAFE"
+
+    elapsed_ms = int((time.time() - start) * 1000)
+    return {
+        "score": score,
+        "verdict": verdict,
+        "confidence": round(min(0.35 + score * 0.55, 0.88), 3),
+        "quick_flags": flags[:4],
+        "sender_domain": sender_domain,
+        "is_trusted_domain": is_trusted,
+        "is_transactional": is_transactional,
+        "phase": "quick",
+        "inference_time_ms": elapsed_ms,
+        "gmail_message_id": request.gmail_message_id,
+    }
+
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────

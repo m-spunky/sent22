@@ -146,6 +146,7 @@ async def analyze_text_llm(text: str) -> dict:
             url="https://openrouter.ai/api/v1/chat/completions",
             headers=headers,
             data=json.dumps(payload),
+            timeout=3.0,
         )
         response.raise_for_status()
         return response.json()
@@ -332,7 +333,7 @@ def _clean_llm_json(text: str) -> str:
     return text.strip()
 
 
-async def analyze_text(text: str, input_type: str = "email") -> dict:
+async def analyze_text(text: str, input_type: str = "email", skip_heavy: bool = False) -> dict:
     """
     Main entry point.
     Runs GPT-4o-mini + BERT phishing model in parallel.
@@ -349,8 +350,13 @@ async def analyze_text(text: str, input_type: str = "email") -> dict:
     try:
         from models.bert_phishing_model import predict as bert_predict
         gpt_task = asyncio.create_task(analyze_text_llm(text))
-        bert_task = asyncio.create_task(bert_predict(text))
-        gpt_result, bert_result = await asyncio.gather(gpt_task, bert_task, return_exceptions=True)
+        
+        if skip_heavy:
+            bert_result = None
+            gpt_result = await gpt_task
+        else:
+            bert_task = asyncio.create_task(bert_predict(text))
+            gpt_result, bert_result = await asyncio.gather(gpt_task, bert_task, return_exceptions=True)
     except ImportError:
         # BERT not available — run GPT only
         gpt_result = await _run_gpt_safe(text)

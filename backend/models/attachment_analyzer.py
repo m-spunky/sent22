@@ -760,6 +760,111 @@ def _build_summary(results: list) -> dict:
     }
 
 
+# ── VirusTotal v3 Integration ─────────────────────────────────────────────────
+
+async def scan_with_virustotal(filename: str, mime_type: str, data: bytes) -> dict:
+    """
+    Scan file bytes with VirusTotal API v3.
+    Returns a vt_result dict. On quota/error falls back to empty result so
+    caller can still use the static analyzer output.
+    """
+    import os
+    import asyncio
+    import httpx
+
+    api_key = os.getenv("VIRUSTOTAL_API_KEY", "")
+    if not api_key or not data:
+        return {"available": False, "reason": "no_api_key" if not api_key else "no_data"}
+
+    headers = {"x-apikey": api_key}
+
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            # 1. Upload file
+            files = {"file": (filename, data, mime_type or "application/octet-stream")}
+            upload_resp = await client.post(
+                "https://www.virustotal.com/api/v3/files",
+                headers=headers,
+                files=files,
+            )
+
+            if upload_resp.status_code == 429:
+                logger.warning("[VT] Rate limit hit — skipping VT scan")
+                return {"available": False, "reason": "rate_limited"}
+
+            if upload_resp.status_code not in (200, 201):
+                logger.warning(f"[VT] Upload failed: HTTP {upload_resp.status_code}")
+                return {"available": False, "reason": f"upload_http_{upload_resp.status_code}"}
+
+            analysis_id = upload_resp.json().get("data", {}).get("id", "")
+            if not analysis_id:
+                return {"available": False, "reason": "no_analysis_id"}
+
+            # 2. Poll for results (max 30s / 10 polls)
+            analysis_url = f"https://www.virustotal.com/api/v3/analyses/{analysis_id}"
+            for attempt in range(10):
+                await asyncio.sleep(3)
+                poll_resp = await client.get(analysis_url, headers=headers)
+                if poll_resp.status_code != 200:
+                    continue
+                poll_data = poll_resp.json().get("data", {})
+                status = poll_data.get("attributes", {}).get("status", "")
+                if status == "completed":
+                    attrs = poll_data["attributes"]
+                    stats = attrs.get("stats", {})
+                    results = attrs.get("results", {})
+
+                    malicious = stats.get("malicious", 0)
+                    suspicious = stats.get("suspicious", 0)
+                    undetected = stats.get("undetected", 0)
+                    total_engines = malicious + suspicious + undetected + stats.get("harmless", 0) + stats.get("type-unsupported", 0)
+
+                    malicious_engines = [
+                        eng for eng, res in results.items()
+                        if res.get("category") in ("malicious", "suspicious")
+                    ][:10]
+                    malware_families = list({
+                        res.get("result", "")
+                        for res in results.values()
+                        if res.get("category") == "malicious" and res.get("result")
+                    })[:5]
+
+                    vt_score = round(malicious / max(total_engines, 1), 4)
+                    risk_level = (
+                        "CRITICAL" if malicious >= 5 else
+                        "HIGH"     if malicious >= 2 else
+                        "MEDIUM"   if suspicious >= 3 else
+                        "LOW"
+                    )
+
+                    # Build file sha256 for permalink
+                    sha256 = attrs.get("sha256", "")
+                    permalink = f"https://www.virustotal.com/gui/file/{sha256}" if sha256 else ""
+
+                    return {
+                        "available": True,
+                        "scan_id": analysis_id,
+                        "sha256": sha256,
+                        "permalink": permalink,
+                        "detection_ratio": f"{malicious} / {total_engines}",
+                        "malicious_count": malicious,
+                        "suspicious_count": suspicious,
+                        "total_engines": total_engines,
+                        "malicious_engines": malicious_engines,
+                        "malware_families": malware_families,
+                        "file_type": attrs.get("type_description", ""),
+                        "first_submission": attrs.get("first_submission_date", ""),
+                        "vt_score": vt_score,
+                        "risk_level": risk_level,
+                    }
+
+            return {"available": False, "reason": "analysis_timeout"}
+
+    except Exception as exc:
+        logger.warning(f"[VT] Scan error: {exc}")
+        return {"available": False, "reason": str(exc)[:80]}
+
+
 # ── Simulated Execution Trace ─────────────────────────────────────────────────
 
 _KILL_CHAIN_STAGES = {

@@ -19,23 +19,28 @@ FIRST_CONTACT_THRESHOLD_HOURS = 24
 
 # Pre-seeded well-known domains (never flag these)
 _PRESEED = {
-    "google.com": "2010-01-01T00:00:00Z",
-    "microsoft.com": "2010-01-01T00:00:00Z",
-    "github.com": "2010-01-01T00:00:00Z",
-    "apple.com": "2010-01-01T00:00:00Z",
-    "amazon.com": "2010-01-01T00:00:00Z",
-    "stripe.com": "2010-01-01T00:00:00Z",
-    "paypal.com": "2010-01-01T00:00:00Z",
-    "linkedin.com": "2010-01-01T00:00:00Z",
-    "facebook.com": "2010-01-01T00:00:00Z",
-    "twitter.com": "2010-01-01T00:00:00Z",
-    "outlook.com": "2010-01-01T00:00:00Z",
-    "yahoo.com": "2010-01-01T00:00:00Z",
-    "netflix.com": "2010-01-01T00:00:00Z",
-    "dropbox.com": "2010-01-01T00:00:00Z",
-    "zoom.us": "2010-01-01T00:00:00Z",
-    "slack.com": "2010-01-01T00:00:00Z",
+    # Tech / Cloud / Developer
+    "google.com": "2010-01-01T00:00:00Z", "gmail.com": "2010-01-01T00:00:00Z",
+    "microsoft.com": "2010-01-01T00:00:00Z", "outlook.com": "2010-01-01T00:00:00Z",
+    "github.com": "2010-01-01T00:00:00Z", "gitlab.com": "2010-01-01T00:00:00Z",
+    "apple.com": "2010-01-01T00:00:00Z", "icloud.com": "2010-01-01T00:00:00Z",
+    "amazon.com": "2010-01-01T00:00:00Z", "aws.amazon.com": "2010-01-01T00:00:00Z",
+    "stripe.com": "2010-01-01T00:00:00Z", "paypal.com": "2010-01-01T00:00:00Z",
+    "linkedin.com": "2010-01-01T00:00:00Z", "facebook.com": "2010-01-01T00:00:00Z",
+    "twitter.com": "2010-01-01T00:00:00Z", "x.com": "2010-01-01T00:00:00Z",
+    "yahoo.com": "2010-01-01T00:00:00Z", "netflix.com": "2010-01-01T00:00:00Z",
+    "dropbox.com": "2010-01-01T00:00:00Z", "zoom.us": "2010-01-01T00:00:00Z",
+    "slack.com": "2010-01-01T00:00:00Z", "atlassian.com": "2010-01-01T00:00:00Z",
+    "vercel.com": "2010-01-01T00:00:00Z", "netlify.com": "2010-01-01T00:00:00Z",
+    "heroku.com": "2010-01-01T00:00:00Z", "render.com": "2010-01-01T00:00:00Z",
+    "kaggle.com": "2010-01-01T00:00:00Z", "jarvislabs.ai": "2010-01-01T00:00:00Z",
+    "devfolio.co": "2010-01-01T00:00:00Z", "openai.com": "2010-01-01T00:00:00Z",
+    "anthropic.com": "2010-01-01T00:00:00Z", "huggingface.co": "2010-01-01T00:00:00Z",
+    # India / Educational
+    "gov.in": "2010-01-01T00:00:00Z", "nic.in": "2010-01-01T00:00:00Z",
+    "ac.in": "2010-01-01T00:00:00Z", "edu.in": "2010-01-01T00:00:00Z",
 }
+
 
 
 def _load_cache() -> dict:

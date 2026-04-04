@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SentinelAI Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" />
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <div class="header">
+      <div class="header__brand">
+        <div class="header__logo">S</div>
+        <div>
+          <div class="header__title">SentinelAI</div>
+          <div class="header__sub">Phishing Guard</div>
+        </div>
+      </div>
+      <div id="header-verdict" class="header__verdict header__verdict--unknown">SCANNING</div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading-state" class="loading">
+      <div class="loading__spinner"></div>
+      <div class="loading__text">Running full analysis…</div>
+      <div class="loading__sub">Checking NLP • Headers • URLs • Threat Intel</div>
+    </div>
+
+    <!-- Main Content (hidden until results) -->
+    <div id="main-content" class="hidden">
+
+      <!-- Score Card -->
+      <div class="card" id="score-card">
+        <div class="score-hero">
+          <div class="score-circle" id="score-circle">
+            <svg viewBox="0 0 80 80" class="score-ring">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#1f2937" stroke-width="8"/>
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#3b82f6" stroke-width="8"
+                stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6"
+                class="score-ring__progress" id="score-ring-progress"
+                transform="rotate(-90 40 40)"/>
+            </svg>
+            <div class="score-circle__inner">
+              <div class="score-circle__num" id="score-num">—</div>
+              <div class="score-circle__label">/100</div>
+            </div>
+          </div>
+          <div class="score-meta">
+            <div class="score-verdict" id="score-verdict">SCANNING</div>
+            <div class="score-conf" id="score-conf">Confidence: —</div>
+            <div class="score-time" id="score-time"></div>
+          </div>
+        </div>
+        <!-- Layer bars -->
+        <div class="layer-bars" id="layer-bars"></div>
+      </div>
+
+      <!-- Threats / Flags -->
+      <div class="card" id="threats-card">
+        <div class="card__title">⚡ Detected Threats</div>
+        <div id="threats-list" class="threats-list"></div>
+      </div>
+
+      <!-- Attachments -->
+      <div class="card hidden" id="attachments-card">
+        <div class="card__title">📎 Attachments</div>
+        <div id="attachments-list"></div>
+      </div>
+
+      <!-- Extracted URLs -->
+      <div class="card" id="urls-card">
+        <div class="card__title">🔗 Extracted URLs</div>
+        <div id="urls-list" class="urls-list"></div>
+      </div>
+
+      <!-- Sandbox Panel (shown inline when user clicks Sandbox) -->
+      <div class="card hidden" id="sandbox-panel">
+        <div class="sandbox-header">
+          <button id="sandbox-back" class="btn btn--ghost btn--sm">← Back</button>
+          <div class="sandbox-title" id="sandbox-title">URL Sandbox</div>
+        </div>
+        <div id="sandbox-body"></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions-bar">
+        <a id="btn-platform" href="#" target="_blank" class="btn btn--primary">
+          📊 Full Report in Sentinel
+        </a>
+        <a id="btn-chat" href="#" target="_blank" class="btn btn--secondary">
+          💬 Ask Sentinel Chat
+        </a>
+        <button id="btn-report" class="btn btn--danger">🚩 Report</button>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-state" class="hidden error-state">
+      <div class="error-state__icon">⚠️</div>
+      <div class="error-state__title">Analysis Unavailable</div>
+      <div class="error-state__msg" id="error-msg">Could not reach Sentinel backend.</div>
+      <button id="btn-retry" class="btn btn--primary" style="margin-top:12px">Retry</button>
+    </div>
+  </div>
+
+  <script src="../shared/utils.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

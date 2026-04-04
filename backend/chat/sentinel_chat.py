@@ -144,7 +144,7 @@ async def generate_explanation_narrative(analysis_result: dict, input_preview: s
                 "temperature": 0.2,
                 "max_tokens": 350,
             }),
-            timeout=12.0
+            timeout=3.0
         )
         resp.raise_for_status()
         return resp.json()

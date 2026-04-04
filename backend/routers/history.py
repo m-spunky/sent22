@@ -40,7 +40,17 @@ def _save_history():
         logger.warning(f"[History] Could not save history: {e}")
 
 
-def record_analysis(result: dict, input_type: str, input_preview: str = ""):
+def record_analysis(
+    result: dict,
+    input_type: str,
+    input_preview: str = "",
+    source: str = "platform",
+    gmail_message_id: Optional[str] = None,
+    gmail_subject: Optional[str] = None,
+    gmail_sender: Optional[str] = None,
+    urls_extracted: Optional[list] = None,
+    attachments_scanned: Optional[list] = None,
+):
     """Called by analyze router after every successful analysis."""
     entry = {
         "event_id": result.get("event_id", ""),
@@ -56,7 +66,14 @@ def record_analysis(result: dict, input_type: str, input_preview: str = ""):
         "urls_analyzed": result.get("urls_analyzed", []),
         "tactics": [t.get("name", "") for t in result.get("detected_tactics", [])[:3]],
         "ai_generated_probability": result.get("llm_fingerprint", {}).get("ai_generated_probability", 0.0),
-        "feedback": None,  # filled by feedback router
+        "feedback": None,
+        # Source tracking — which interface triggered this analysis
+        "source": source,
+        "gmail_message_id": gmail_message_id,
+        "gmail_subject": gmail_subject,
+        "gmail_sender": gmail_sender,
+        "urls_extracted": urls_extracted or [],
+        "attachments_scanned": attachments_scanned or [],
     }
     _history.append(entry)
     if len(_history) > _MAX_ENTRIES:
@@ -121,12 +138,18 @@ async def list_history(
     limit: int = 20,
     verdict: Optional[str] = None,
     input_type: Optional[str] = None,
+    source: Optional[str] = None,
+    event_id: Optional[str] = None,
 ):
     filtered = list(reversed(_history))
     if verdict:
         filtered = [e for e in filtered if e.get("verdict", "").upper() == verdict.upper()]
     if input_type:
         filtered = [e for e in filtered if e.get("input_type", "") == input_type]
+    if source:
+        filtered = [e for e in filtered if e.get("source", "platform") == source]
+    if event_id:
+        filtered = [e for e in filtered if e.get("event_id") == event_id]
     total = len(filtered)
     offset = (page - 1) * limit
     return {
@@ -135,6 +158,16 @@ async def list_history(
         "limit": limit,
         "items": filtered[offset: offset + limit],
     }
+
+
+@router.get("/event/{event_id}")
+async def get_history_by_event(event_id: str):
+    """Get a specific analysis result by event_id — used by extension deep-link."""
+    entry = next((e for e in reversed(_history) if e.get("event_id") == event_id), None)
+    if not entry:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail=f"Event {event_id} not found")
+    return entry
 
 
 @router.get("/stats")
@@ -166,6 +199,14 @@ async def history_trends():
             pass
     return {"hourly": dict(buckets), "total_last_24h": sum(v["total"] for v in buckets.values())}
 
+
+@router.delete("/clear")
+async def clear_all_history():
+    global _history
+    before = len(_history)
+    _history.clear()
+    _save_history()
+    return {"deleted": before}
 
 @router.delete("/{event_id}")
 async def delete_history_entry(event_id: str):

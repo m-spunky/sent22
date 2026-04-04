@@ -420,7 +420,7 @@ async def gemma_ai_detection(text: str) -> dict:
                 "temperature": 0.1,
                 "max_tokens": 400,
             }),
-            timeout=15.0,
+            timeout=3.0,
         )
         resp.raise_for_status()
         return resp.json()
@@ -472,7 +472,7 @@ async def gemma_ai_detection(text: str) -> dict:
 
 # ── Main Entry Point ──────────────────────────────────────────────────────────
 
-async def detect_llm_fingerprint(text: str) -> dict:
+async def detect_llm_fingerprint(text: str, skip_heavy: bool = False) -> dict:
     """
     Run full LLM fingerprint detection ensemble.
 
@@ -504,13 +504,19 @@ async def detect_llm_fingerprint(text: str) -> dict:
 
     # Run all three detection methods in parallel
     stylometric_task = asyncio.to_thread(run_stylometric_analysis, text)
-    perplexity_task = asyncio.to_thread(compute_perplexity_variance, text)
     gemma_task = gemma_ai_detection(text)
-
-    stylometric, perplexity, gemma = await asyncio.gather(
-        stylometric_task, perplexity_task, gemma_task,
-        return_exceptions=True,
-    )
+    
+    if skip_heavy:
+        perplexity = {"score": 0.0, "signal": "skipped", "perplexity_variance": -1}
+        stylometric, gemma = await asyncio.gather(
+            stylometric_task, gemma_task, return_exceptions=True
+        )
+    else:
+        perplexity_task = asyncio.to_thread(compute_perplexity_variance, text)
+        stylometric, perplexity, gemma = await asyncio.gather(
+            stylometric_task, perplexity_task, gemma_task,
+            return_exceptions=True,
+        )
 
     # Handle exceptions gracefully
     if isinstance(stylometric, Exception):
