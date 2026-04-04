@@ -1,11 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <title>SentinelAI</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       width: 300px;
       background: #0f1117;
@@ -13,6 +21,7 @@
       font-family: 'Inter', sans-serif;
       font-size: 13px;
     }
+
     .header {
       background: linear-gradient(135deg, #111827, #1e1b4b);
       padding: 14px 16px;
@@ -21,43 +30,88 @@
       gap: 10px;
       border-bottom: 1px solid #252d3d;
     }
+
     .logo {
-      width: 36px; height: 36px;
+      width: 36px;
+      height: 36px;
       background: linear-gradient(135deg, #3b82f6, #8b5cf6);
       border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; font-weight: 800; color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: white;
     }
-    .brand { flex: 1; }
-    .brand-name { font-size: 15px; font-weight: 700; }
-    .brand-sub { font-size: 11px; color: #8892a4; }
+
+    .brand {
+      flex: 1;
+    }
+
+    .brand-name {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: #8892a4;
+    }
+
     .status-dot {
-      width: 10px; height: 10px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: #22c55e;
       box-shadow: 0 0 6px #22c55e88;
     }
-    .status-dot--off { background: #4b5563; box-shadow: none; }
 
-    .section { padding: 12px 16px; border-bottom: 1px solid #1e2434; }
+    .status-dot--off {
+      background: #4b5563;
+      box-shadow: none;
+    }
+
+    .section {
+      padding: 12px 16px;
+      border-bottom: 1px solid #1e2434;
+    }
+
     .section-title {
-      font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      color: #4b5563; margin-bottom: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #4b5563;
+      margin-bottom: 8px;
     }
+
     .status-row {
-      display: flex; align-items: center;
+      display: flex;
+      align-items: center;
       justify-content: space-between;
-      font-size: 12px; color: #8892a4;
+      font-size: 12px;
+      color: #8892a4;
     }
-    .status-val { font-weight: 600; color: #f0f2f8; }
-    .status-val--ok { color: #22c55e; }
-    .status-val--err { color: #ef4444; }
+
+    .status-val {
+      font-weight: 600;
+      color: #f0f2f8;
+    }
+
+    .status-val--ok {
+      color: #22c55e;
+    }
+
+    .status-val--err {
+      color: #ef4444;
+    }
 
     .stat-grid {
-      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 8px;
     }
+
     .stat-box {
       background: #161b27;
       border: 1px solid #252d3d;
@@ -65,47 +119,119 @@
       padding: 8px 10px;
       text-align: center;
     }
-    .stat-val { font-size: 18px; font-weight: 800; color: #f0f2f8; }
-    .stat-label { font-size: 10px; color: #4b5563; margin-top: 2px; }
 
-    .actions { padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .stat-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: #f0f2f8;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: #4b5563;
+      margin-top: 2px;
+    }
+
+    .actions {
+      padding: 12px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
     .btn {
-      display: flex; align-items: center; justify-content: center;
-      gap: 6px; padding: 9px 14px;
-      border-radius: 8px; font-size: 12px; font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
       font-family: 'Inter', sans-serif;
-      cursor: pointer; border: none; text-decoration: none;
-      transition: all 0.15s ease; color: white;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      color: white;
     }
-    .btn--primary { background: #3b82f6; }
-    .btn--primary:hover { background: #2563eb; }
-    .btn--secondary { background: #1e2434; border: 1px solid #252d3d; color: #8892a4; }
-    .btn--secondary:hover { background: #252d3d; color: #f0f2f8; }
+
+    .btn--primary {
+      background: #3b82f6;
+    }
+
+    .btn--primary:hover {
+      background: #2563eb;
+    }
+
+    .btn--secondary {
+      background: #1e2434;
+      border: 1px solid #252d3d;
+      color: #8892a4;
+    }
+
+    .btn--secondary:hover {
+      background: #252d3d;
+      color: #f0f2f8;
+    }
+
     .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .toggle-label { font-size: 12px; color: #8892a4; }
+
+    .toggle-label {
+      font-size: 12px;
+      color: #8892a4;
+    }
+
     .toggle {
-      position: relative; width: 36px; height: 20px;
+      position: relative;
+      width: 36px;
+      height: 20px;
     }
-    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
     .toggle-slider {
-      position: absolute; cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: #374151; border-radius: 999px;
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #374151;
+      border-radius: 999px;
       transition: 0.2s;
     }
+
     .toggle-slider::before {
-      content: ''; position: absolute;
-      height: 14px; width: 14px;
-      left: 3px; bottom: 3px;
-      background: white; border-radius: 50%;
+      content: '';
+      position: absolute;
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
       transition: 0.2s;
     }
-    input:checked + .toggle-slider { background: #3b82f6; }
-    input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+    input:checked+.toggle-slider {
+      background: #3b82f6;
+    }
+
+    input:checked+.toggle-slider::before {
+      transform: translateX(16px);
+    }
   </style>
 </head>
+
 <body>
   <div class="header">
     <div class="logo">S</div>
@@ -165,13 +291,13 @@
   </div>
 
   <div class="actions">
-    <a href="http://localhost:3000/dashboard" target="_blank" class="btn btn--primary">
+    <a href="http://localhost:3002/dashboard" target="_blank" class="btn btn--primary">
       🌐 Open Sentinel Platform
     </a>
-    <a href="http://localhost:3000/dashboard/chat" target="_blank" class="btn btn--secondary">
+    <a href="http://localhost:3002/dashboard/chat" target="_blank" class="btn btn--secondary">
       💬 Sentinel Chat
     </a>
-    <a href="http://localhost:3000/dashboard/history?source=gmail_extension" target="_blank" class="btn btn--secondary">
+    <a href="http://localhost:3002/dashboard/history?source=gmail_extension" target="_blank" class="btn btn--secondary">
       📋 Gmail Analysis History
     </a>
     <button id="btn-clear-cache" class="btn btn--secondary" style="color:#ef4444;border-color:#7f1d1d">
@@ -181,4 +307,5 @@
 
   <script src="popup.js"></script>
 </body>
+
 </html>

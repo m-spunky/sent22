@@ -17,8 +17,8 @@
   let bannerInjected = false;
 
   const FULL_LIMIT = 5;    // count 0–4  → full pipeline
-  const LLM_LIMIT  = 15;   // count 5–14 → LLM+NLP only
-                            // count >= 15 → quick only
+  const LLM_LIMIT = 15;   // count 5–14 → LLM+NLP only
+  // count >= 15 → quick only
 
   const SELECTORS = {
     inboxContainer: '.AO',
@@ -36,20 +36,27 @@
       if (m) return m[1];
     }
     const subject = rowEl.querySelector('.bog, .bqe');
-    const sender  = rowEl.querySelector('.yW span[name]');
+    const sender = rowEl.querySelector('.yW span[name]');
     if (subject && sender) {
-      return btoa(`${sender.textContent}|${subject.textContent}`).slice(0, 20);
+
+      const text = `${sender.textContent}|${subject.textContent}`;
+      let hash = 0;
+      for (let i = 0; i < text.length; i++) {
+        hash = ((hash << 5) - hash) + text.charCodeAt(i);
+        hash |= 0;
+      }
+      return 'hash_' + Math.abs(hash).toString(16);
     }
     return null;
   }
 
   function getRowMeta(rowEl) {
     const subjectEl = rowEl.querySelector('.bog, .bqe, .y6 span');
-    const fromEl    = rowEl.querySelector('.yW span[name]') || rowEl.querySelector('.yX span');
+    const fromEl = rowEl.querySelector('.yW span[name]') || rowEl.querySelector('.yX span');
     const snippetEl = rowEl.querySelector('.y2');
     return {
       subject: subjectEl?.textContent.trim() || '',
-      sender:  fromEl?.getAttribute('email') || fromEl?.textContent.trim() || '',
+      sender: fromEl?.getAttribute('email') || fromEl?.textContent.trim() || '',
       snippet: snippetEl?.textContent.trim() || '',
     };
   }
@@ -59,11 +66,11 @@
     // Remove stale badge if present
     rowEl.querySelector('.sentinel-badge')?.remove();
 
-    const score      = result?.score ?? result?.threat_score ?? 0;
+    const score = result?.score ?? result?.threat_score ?? 0;
     const verdictKey = result?.verdict ?? scoreToVerdict(score);
-    const pct        = scoreToPercent(score);
-    const v          = getVerdict(verdictKey);
-    const isLoading  = !result;
+    const pct = scoreToPercent(score);
+    const v = getVerdict(verdictKey);
+    const isLoading = !result;
 
     const badge = document.createElement('span');
     badge.className = `sentinel-badge sentinel-badge--${isLoading ? 'unknown' : v.score_class}`;
@@ -97,8 +104,8 @@
   function showTooltip(event, msgId, result, rowEl) {
     hideTooltip();
     if (!result) return;
-    const pct   = scoreToPercent(result.score ?? result.threat_score ?? 0);
-    const v     = getVerdict(result.verdict ?? 'UNKNOWN');
+    const pct = scoreToPercent(result.score ?? result.threat_score ?? 0);
+    const v = getVerdict(result.verdict ?? 'UNKNOWN');
     const flags = result.quick_flags || (result.detected_tactics || []).map(t => t.name).slice(0, 4) || [];
     const tierLabel = result.analysis_tier === 'full' ? '★ Full analysis'
       : result.analysis_tier === 'llm' ? '◆ LLM analysis' : '· Quick scan';
@@ -125,7 +132,7 @@
     });
     document.body.appendChild(tooltipEl);
     const rect = event.target.getBoundingClientRect();
-    tooltipEl.style.top  = `${rect.bottom + window.scrollY + 6}px`;
+    tooltipEl.style.top = `${rect.bottom + window.scrollY + 6}px`;
     tooltipEl.style.left = `${Math.min(rect.left + window.scrollX, window.innerWidth - 320)}px`;
   }
 
@@ -136,8 +143,48 @@
     if (!e.target.closest('.sentinel-tooltip') && !e.target.closest('.sentinel-badge')) hideTooltip();
   });
 
+  // ── Extract full email content when email is open ─────────────────────────
+  function extractOpenEmailContent() {
+    const bodyEl = document.querySelector(SELECTORS.openedBody); // .a3s.aiL
+    if (!bodyEl) return null;
+    const bodyText = (bodyEl.innerText || bodyEl.textContent || '').trim();
+    if (!bodyText || bodyText.length < 20) return null;
+
+    // Attachment filenames from Gmail attachment chips (names only — bytes not accessible)
+    const attachmentNames = [];
+    const seen = new Set();
+    // Try multiple selectors — Gmail changes these periodically
+    document.querySelectorAll(
+      '.aZo .aV3, .brc .aV3, .aQy .aV3, .aQH span[data-tooltip], .aQH .aV3'
+    ).forEach(el => {
+      const t = el.textContent?.trim();
+      if (t && t.includes('.') && !seen.has(t)) { seen.add(t); attachmentNames.push(t); }
+    });
+    // Fallback: attachment icon siblings
+    document.querySelectorAll('.aQH .aZo').forEach(el => {
+      const t = el.querySelector('span')?.textContent?.trim();
+      if (t && t.includes('.') && !seen.has(t)) { seen.add(t); attachmentNames.push(t); }
+    });
+
+    // Visible To / Date from open-email header area
+    const toEl = document.querySelector('.hb .g2 span[email], .ajy span[email]');
+    const dateEl = document.querySelector('.g3 .gK span, .g3 span[title]');
+
+    return {
+      bodyText: bodyText.slice(0, 12000),
+      attachmentNames,
+      hasAttachments: attachmentNames.length > 0,
+      to: toEl?.getAttribute('email') || toEl?.textContent?.trim() || '',
+      date: dateEl?.getAttribute('title') || dateEl?.textContent?.trim() || '',
+    };
+  }
+
   function openSidePanel(msgId, result, meta) {
-    chrome.runtime.sendMessage({ action: 'open_sidepanel', context: { msgId, quickResult: result, meta } });
+    const emailContent = extractOpenEmailContent(); // null if email not open
+    chrome.runtime.sendMessage({
+      action: 'open_sidepanel',
+      context: { msgId, quickResult: result, meta, emailContent },
+    });
   }
 
   // ── Session counter helpers ───────────────────────────────────────────────
@@ -300,10 +347,10 @@
     if (document.querySelector('.sentinel-email-banner')) return;
 
     const pct = scoreToPercent(score);
-    const v   = getVerdict(verdictKey);
+    const v = getVerdict(verdictKey);
     const tactics = result?.detected_tactics || [];
-    const flags   = result?.quick_flags || tactics.map(t => t.name) || [];
-    const urls    = result?.urls_analyzed || extractUrlsFromText(bodyEl.textContent);
+    const flags = result?.quick_flags || tactics.map(t => t.name) || [];
+    const urls = result?.urls_analyzed || extractUrlsFromText(bodyEl.textContent);
     const eventId = result?.event_id || '';
 
     const banner = document.createElement('div');
@@ -320,12 +367,12 @@
       <div class="sentinel-banner__body">
         <div class="sentinel-banner__flags">
           ${flags.length
-            ? flags.slice(0, 4).map(f => {
-                const name = typeof f === 'string' ? f : f.name;
-                const desc = typeof f === 'object' ? (f.description || '') : '';
-                return `<div class="sentinel-banner__flag">⚠ <strong>${name}</strong>${desc ? ` — ${desc}` : ''}</div>`;
-              }).join('')
-            : '<div class="sentinel-banner__flag">⚠ Suspicious patterns detected</div>'}
+        ? flags.slice(0, 4).map(f => {
+          const name = typeof f === 'string' ? f : f.name;
+          const desc = typeof f === 'object' ? (f.description || '') : '';
+          return `<div class="sentinel-banner__flag">⚠ <strong>${name}</strong>${desc ? ` — ${desc}` : ''}</div>`;
+        }).join('')
+        : '<div class="sentinel-banner__flag">⚠ Suspicious patterns detected</div>'}
         </div>
         ${urls.length ? `<div class="sentinel-banner__urls">
           <div class="sentinel-banner__section-title">🔗 Extracted Links</div>
@@ -334,9 +381,9 @@
       </div>
       <div class="sentinel-banner__actions">
         ${eventId
-          ? `<a href="http://localhost:3000/dashboard/analyze?event_id=${eventId}" target="_blank" class="sentinel-banner__btn sentinel-banner__btn--primary">📊 View Full Report</a>`
-          : `<button class="sentinel-banner__btn sentinel-banner__btn--primary" id="sentinel-banner-panel-${msgId}">📊 Detailed Analysis</button>`}
-        ${eventId ? `<a href="http://localhost:3000/dashboard/chat?q=${encodeURIComponent(`Analyze email event ${eventId}`)}" target="_blank" class="sentinel-banner__btn sentinel-banner__btn--secondary">💬 Sentinel Chat</a>` : ''}
+        ? `<a href="http://localhost:3002/dashboard/analyze?event_id=${eventId}" target="_blank" class="sentinel-banner__btn sentinel-banner__btn--primary">📊 View Full Report</a>`
+        : `<button class="sentinel-banner__btn sentinel-banner__btn--primary" id="sentinel-banner-panel-${msgId}">📊 Detailed Analysis</button>`}
+        ${eventId ? `<a href="http://localhost:3002/dashboard/chat?q=${encodeURIComponent(`Analyze email event ${eventId}`)}" target="_blank" class="sentinel-banner__btn sentinel-banner__btn--secondary">💬 Sentinel Chat</a>` : ''}
         <button class="sentinel-banner__btn sentinel-banner__btn--ghost">🚩 Report</button>
         <button class="sentinel-banner__btn sentinel-banner__btn--ghost sentinel-banner__close-btn">✅ Mark Safe</button>
       </div>`;

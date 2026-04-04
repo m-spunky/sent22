@@ -84,6 +84,104 @@ async def _emit_layer_event(event_id: str, layer: str, data: dict, step: int, to
         pass
 
 
+async def _fetch_gmail_attachments(gmail_message_id: str) -> list[dict]:
+    """
+    Fetch attachment bytes from Gmail API using the stored OAuth token.
+    Returns list of {filename, mime_type, size_bytes, data: bytes}.
+    Returns [] silently if OAuth not connected or message has no attachments.
+    """
+    import base64
+    import httpx as _httpx
+
+    try:
+        from routers.gmail import _get_real_session, _save_token
+        session = _get_real_session()
+        if not session:
+            return []
+
+        creds = session.get("credentials", {})
+        access_token = creds.get("token", "")
+
+        # Proactively refresh token (avoids 401 mid-request)
+        if creds.get("refresh_token") and creds.get("client_id"):
+            try:
+                async with _httpx.AsyncClient(timeout=6.0) as rc:
+                    r = await rc.post(
+                        creds.get("token_uri", "https://oauth2.googleapis.com/token"),
+                        data={
+                            "client_id": creds["client_id"],
+                            "client_secret": creds.get("client_secret", ""),
+                            "refresh_token": creds["refresh_token"],
+                            "grant_type": "refresh_token",
+                        },
+                    )
+                    if r.status_code == 200:
+                        new_token = r.json().get("access_token", "")
+                        if new_token:
+                            access_token = new_token
+                            creds["token"] = new_token
+                            _save_token(session)
+            except Exception:
+                pass  # use existing token — may still be valid
+
+        async with _httpx.AsyncClient(timeout=15.0) as client:
+            auth = {"Authorization": f"Bearer {access_token}"}
+
+            # Step 1: fetch full message structure
+            msg_resp = await client.get(
+                f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{gmail_message_id}",
+                headers=auth,
+                params={"format": "full"},
+            )
+            if msg_resp.status_code != 200:
+                logger.warning(f"[GmailAttach] Message fetch HTTP {msg_resp.status_code}")
+                return []
+
+            # Step 2: recursively find attachment parts
+            def _find_parts(parts, acc):
+                for p in (parts or []):
+                    if p.get("filename") and p.get("body", {}).get("attachmentId"):
+                        acc.append(p)
+                    _find_parts(p.get("parts", []), acc)
+
+            att_parts: list[dict] = []
+            _find_parts(msg_resp.json().get("payload", {}).get("parts", []), att_parts)
+            if not att_parts:
+                return []
+
+            # Step 3: fetch bytes (max 5 attachments, skip huge files >10MB)
+            results = []
+            for part in att_parts[:5]:
+                size = part.get("body", {}).get("size", 0)
+                if size > 10 * 1024 * 1024:
+                    logger.info(f"[GmailAttach] Skipping large attachment ({size} bytes)")
+                    continue
+                att_id = part["body"]["attachmentId"]
+                att_resp = await client.get(
+                    f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{gmail_message_id}/attachments/{att_id}",
+                    headers=auth,
+                )
+                if att_resp.status_code != 200:
+                    continue
+                raw_b64 = att_resp.json().get("data", "")
+                if not raw_b64:
+                    continue
+                raw_bytes = base64.urlsafe_b64decode(raw_b64 + "==")
+                results.append({
+                    "filename": part.get("filename", "attachment"),
+                    "mime_type": part.get("mimeType", "application/octet-stream"),
+                    "size_bytes": size or len(raw_bytes),
+                    "data": raw_bytes,
+                })
+                logger.info(f"[GmailAttach] Fetched '{part.get('filename')}' ({len(raw_bytes):,} bytes)")
+
+            return results
+
+    except Exception as e:
+        logger.warning(f"[GmailAttach] Fetch failed: {e}")
+        return []
+
+
 async def _run_full_analysis(content: str, input_type: str, options: dict = None) -> dict:
     """Run the complete 5-layer multi-modal phishing detection pipeline."""
     # Gate concurrent requests — at most 2 full pipelines run simultaneously.
@@ -92,12 +190,16 @@ async def _run_full_analysis(content: str, input_type: str, options: dict = None
     sem = asyncio.Semaphore(4) if llm_only else _full_analysis_sem
     async with sem:
         try:
+            # Extend timeout when Gmail attachment analysis is expected
+            # (Gmail API + VT polling can take up to 30s)
+            has_att = bool((options or {}).get("gmail_message_id") and not llm_only)
+            timeout_secs = 45.0 if has_att else 25.0
             return await asyncio.wait_for(
                 _run_full_analysis_inner(content, input_type, options),
-                timeout=25.0  # hard cap — prevents hanging requests from blocking the queue
+                timeout=timeout_secs,
             )
         except asyncio.TimeoutError:
-            logger.warning("[Analyze] Full pipeline timed out after 25s — returning partial result")
+            logger.warning("[Analyze] Full pipeline timed out — returning 504")
             raise HTTPException(status_code=504, detail="Analysis timed out. Try again or use quick scan.")
 
 
@@ -117,8 +219,20 @@ async def _run_full_analysis_inner(content: str, input_type: str, options: dict 
     await _emit_layer_event(event_id, "pipeline_start", {"status": "running", "input_type": input_type}, 0)
 
     # ── Mode flag ─────────────────────────────────────────────────────────────
-    # llm_only=True: skip URL live lookup, headers, visual, IOC — NLP+LLM only (~1-2s)
     llm_only = options.get("llm_only", False)
+
+    # ── Attachment metadata (names only — bytes not accessible from extension) ─
+    attachment_names = options.get("attachment_names", [])
+    RISKY_EXTS = {
+        ".exe", ".js", ".vbs", ".bat", ".ps1", ".cmd", ".hta", ".scr",
+        ".pif", ".jar", ".msi", ".dll", ".com", ".reg", ".wsf", ".lnk",
+        ".zip", ".rar", ".7z", ".iso", ".img", ".gz", ".tar",
+    }
+    risky_attachments = [
+        n for n in attachment_names
+        if any(n.lower().endswith(ext) for ext in RISKY_EXTS)
+    ]
+    attachment_risk_boost = min(len(risky_attachments) * 0.15, 0.40)
 
     # ── LAYER 1: NLP + Header (parallel) ─────────────────────────────────────
     async def _empty_url():
@@ -160,6 +274,14 @@ async def _run_full_analysis_inner(content: str, input_type: str, options: dict 
         from engines.credential_check import check_domain_exposure
         return await check_domain_exposure(all_domains[0])
     dw_task = asyncio.create_task(_safe_dw()) if all_domains else None
+
+    # Gmail Attachment Fetch — start immediately, runs in parallel with all layers
+    # Uses stored OAuth token to pull attachment bytes, then local + VT analysis later
+    gmail_message_id_opt = options.get("gmail_message_id", "")
+    gmail_att_task = (
+        asyncio.create_task(_fetch_gmail_attachments(gmail_message_id_opt))
+        if gmail_message_id_opt and not llm_only else None
+    )
 
     # Wait for layer 1 (Event emission still happens sequentially for the UI)
     nlp_result, header_result = await asyncio.gather(nlp_task, header_task, return_exceptions=False)
@@ -258,7 +380,13 @@ async def _run_full_analysis_inner(content: str, input_type: str, options: dict 
         
     first_contact_boost = first_contact.get("risk_boost", 0.0)
 
-    total_intel_boost = min(intel_result.get("risk_elevation", 0.0) + ioc_enrichment.get("risk_boost", 0.0) + first_contact_boost, 0.40)
+    total_intel_boost = min(
+        intel_result.get("risk_elevation", 0.0)
+        + ioc_enrichment.get("risk_boost", 0.0)
+        + first_contact_boost
+        + attachment_risk_boost,
+        0.50
+    )
 
     await _emit_layer_event(event_id, "intel", {
         "ioc_matches": len(ioc_enrichment.get("malicious_domains", [])),
@@ -266,6 +394,7 @@ async def _run_full_analysis_inner(content: str, input_type: str, options: dict 
         "campaign_match": bool(intel_result.get("matches")),
         "first_contact": first_contact.get("is_first_contact", False),
         "sources": ioc_enrichment.get("sources", []),
+        "risky_attachments": risky_attachments,
     }, 5)
 
     # ── LAYER 6: Dark Web Exposure Check (PS-05) ───────────────────────────────
@@ -275,6 +404,54 @@ async def _run_full_analysis_inner(content: str, input_type: str, options: dict 
             dark_web_data = await asyncio.wait_for(dw_task, timeout=2.0)
         except Exception:
             pass
+
+    # ── LAYER 7: Gmail Attachment Analysis (bytes → local scanner + VirusTotal) ─
+    gmail_attachment_results = []
+    if gmail_att_task:
+        try:
+            att_items = await asyncio.wait_for(gmail_att_task, timeout=20.0)
+            if att_items:
+                from models.attachment_analyzer import analyze_attachment_bytes, scan_with_virustotal
+
+                # Run VT scans in parallel across all attachments
+                async def _scan_one(att):
+                    local = analyze_attachment_bytes(
+                        att["filename"], att["mime_type"], att["size_bytes"], att["data"]
+                    )
+                    try:
+                        vt = await asyncio.wait_for(
+                            scan_with_virustotal(att["filename"], att["mime_type"], att["data"]),
+                            timeout=12.0,
+                        )
+                    except Exception:
+                        vt = {"available": False, "reason": "timeout"}
+                    return {
+                        "filename": att["filename"],
+                        "mime_type": att["mime_type"],
+                        "size_bytes": att["size_bytes"],
+                        "local_analysis": local,
+                        "virustotal": vt,
+                        "risk_level": vt.get("risk_level") or local.get("risk_level", "UNKNOWN"),
+                        "findings": local.get("findings", []),
+                    }
+
+                gmail_attachment_results = list(await asyncio.gather(
+                    *[_scan_one(att) for att in att_items],
+                    return_exceptions=False,
+                ))
+
+                # Boost intel score based on VT findings
+                vt_malicious = sum(
+                    r["virustotal"].get("malicious_count", 0)
+                    for r in gmail_attachment_results
+                )
+                if vt_malicious > 0:
+                    attachment_risk_boost = min(attachment_risk_boost + 0.30, 0.50)
+                    total_intel_boost = min(total_intel_boost + 0.30, 0.50)
+
+                logger.info(f"[Attach] Analyzed {len(gmail_attachment_results)} attachment(s), VT malicious: {vt_malicious}")
+        except Exception as e:
+            logger.warning(f"[Attach] Attachment analysis error: {e}")
 
     # ── FUSION ────────────────────────────────────────────────────────────────
     fusion = fuse_scores(
@@ -295,6 +472,33 @@ async def _run_full_analysis_inner(content: str, input_type: str, options: dict 
             "severity": "high",
             "layer": "intel"
         })
+
+    # Risky attachment tactics (from extension DOM extraction — before VT)
+    if risky_attachments:
+        fusion["detected_tactics"].append({
+            "name": "Suspicious Attachment Type",
+            "mitre_id": "T1566.001",
+            "description": f"Email contains {len(risky_attachments)} potentially dangerous attachment(s): {', '.join(risky_attachments[:3])}. These file types are commonly used in malware delivery.",
+            "severity": "high" if any(n.lower().endswith((".exe",".vbs",".ps1",".bat",".hta",".scr")) for n in risky_attachments) else "medium",
+            "layer": "attachment"
+        })
+
+    # VT-confirmed malware tactics (from Gmail API + VT scan)
+    for r in gmail_attachment_results:
+        vt = r.get("virustotal", {})
+        if vt.get("available") and vt.get("malicious_count", 0) > 0:
+            families = ", ".join(vt.get("malware_families", [])[:3]) or "unknown family"
+            fusion["detected_tactics"].append({
+                "name": "Malware Confirmed by VirusTotal",
+                "mitre_id": "T1566.001",
+                "description": (
+                    f"'{r['filename']}' flagged by {vt['malicious_count']}/{vt.get('total_engines','?')} "
+                    f"AV engines ({families}). Detection ratio: {vt.get('detection_ratio','?')}."
+                ),
+                "severity": "critical",
+                "layer": "attachment",
+                "vt_permalink": vt.get("permalink"),
+            })
 
     fusion["model_breakdown"]["visual"]["matched_brand"] = visual_result.get("matched_brand", "Unknown")
     fusion["model_breakdown"]["visual"]["similarity"] = visual_result.get("similarity", 0.0)
@@ -318,10 +522,17 @@ async def _run_full_analysis_inner(content: str, input_type: str, options: dict 
         })
 
     # ── AI Explanation Narrative ──────────────────────────────────────────────
-    explanation = await generate_explanation_narrative(
-        {**fusion, "threat_intelligence": threat_intel},
-        content[:400]
-    )
+    # Skip OpenRouter explanation call for extension requests (saves ~2-3s).
+    # The sidepanel doesn't display it, and the fallback is instant.
+    source = options.get("source", "")
+    if llm_only or source == "gmail_extension":
+        from chat.sentinel_chat import _fallback_narrative
+        explanation = _fallback_narrative({**fusion, "threat_intelligence": threat_intel})
+    else:
+        explanation = await generate_explanation_narrative(
+            {**fusion, "threat_intelligence": threat_intel},
+            content[:400]
+        )
 
     # ── Kill Chain (PS-02/PS-03) ──────────────────────────────────────────────
     try:
@@ -354,6 +565,31 @@ async def _run_full_analysis_inner(content: str, input_type: str, options: dict 
         "kill_chain": kill_chain,
         "input_type": input_type,
         "llm_fingerprint": llm_fingerprint,
+        "attachment_summary": {
+            "total": len(attachment_names),
+            "names": attachment_names[:10],
+            "risky": risky_attachments,
+            "risk_boost": attachment_risk_boost,
+        },
+        "attachment_analysis": {
+            "results": [
+                {
+                    "filename": r["filename"],
+                    "mime_type": r["mime_type"],
+                    "size_bytes": r["size_bytes"],
+                    "risk_level": r["risk_level"],
+                    "findings": r["findings"][:5],
+                    "virustotal": r["virustotal"],
+                }
+                for r in gmail_attachment_results
+            ],
+            "count": len(gmail_attachment_results),
+            "vt_available": any(r["virustotal"].get("available") for r in gmail_attachment_results),
+            "has_malicious": any(
+                r["virustotal"].get("malicious_count", 0) > 0
+                for r in gmail_attachment_results
+            ),
+        },
     }
 
     # ── Sentinel Fusion XGBoost (trained on 6,700 TREC-2007 emails) ───────────

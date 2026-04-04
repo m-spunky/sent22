@@ -13,7 +13,7 @@ const mainEl = $('main-content');
 const errorEl = $('error-state');
 
 // ── Utils (loaded from shared/utils.js attached to window) ────────────────────
-const { getVerdict, scoreToPercent, VERDICTS } = window.SentinelUtils;
+// getVerdict, scoreToPercent, VERDICTS, etc. are already in global scope from utils.js
 
 // ── Init: read context from session storage ────────────────────────────────────
 async function init() {
@@ -50,19 +50,51 @@ async function init() {
 
 async function runFullAnalysis() {
   const meta = currentContext.meta || {};
-  const content = `From: ${meta.sender || ''}\nSubject: ${meta.subject || ''}\n\n${meta.snippet || ''}`;
+  const emailContent = currentContext.emailContent; // set when email is open in Gmail
 
-  // Update the layer bars placeholder to show progress
-  if ($('layer-bars')) {
-    $('layer-bars').innerHTML = '<div class="layer-bars__scanning">Running full analysis… (up to 25s)</div>';
+  let content, action, attachmentNames = [];
+
+  if (emailContent?.bodyText && emailContent.bodyText.length > 50) {
+    // ── Full email body available (user had email open) ──────────────────────
+    // Build a structured content string with headers + body for all 5 layers
+    const headerLines = [
+      `From: ${meta.sender || ''}`,
+      `Subject: ${meta.subject || ''}`,
+    ];
+    if (emailContent.to) headerLines.push(`To: ${emailContent.to}`);
+    if (emailContent.date) headerLines.push(`Date: ${emailContent.date}`);
+    if (emailContent.attachmentNames?.length) {
+      attachmentNames = emailContent.attachmentNames;
+      headerLines.push(`X-Attachments: ${attachmentNames.join(', ')}`);
+    }
+    content = headerLines.join('\n') + '\n\n' + emailContent.bodyText;
+    action = 'full_analyze'; // full 5-layer: NLP + URL live + headers + IOC + dark web
+
+    if ($('layer-bars')) {
+      const attNote = attachmentNames.length
+        ? ` · ${attachmentNames.length} attachment(s) detected`
+        : '';
+      $('layer-bars').innerHTML =
+        `<div class="layer-bars__scanning">Running full 5-layer analysis…${attNote}</div>`;
+    }
+  } else {
+    // ── Snippet only (email not open) ─────────────────────────────────────────
+    content = `From: ${meta.sender || ''}\nSubject: ${meta.subject || ''}\n\n${meta.snippet || ''}`;
+    action = 'llm_analyze'; // llm_only: faster, appropriate for snippet
+
+    if ($('layer-bars')) {
+      $('layer-bars').innerHTML =
+        '<div class="layer-bars__scanning">Running AI analysis… (open the email for full 5-layer scan)</div>';
+    }
   }
 
   const resp = await sendMsg({
-    action: 'full_analyze',
+    action,
     content,
     gmailMessageId: currentContext.msgId,
     gmailSubject: meta.subject,
     gmailSender: meta.sender,
+    attachmentNames,
   });
 
   if (resp?.success && resp.result) {
@@ -71,10 +103,9 @@ async function runFullAnalysis() {
   } else {
     const isAlreadyShowingResult = !mainEl.classList.contains('hidden');
     if (isAlreadyShowingResult) {
-      // We already have a quick result visible — just update layer bars with error
       if ($('layer-bars')) {
         $('layer-bars').innerHTML = `<div class="layer-bars__error" style="color:#ef4444;font-size:12px;padding:8px 0">
-          ⚠ Full analysis failed: ${resp?.error || 'Backend timeout'}. Quick scan result shown above.
+          ⚠ Analysis failed: ${resp?.error || 'Backend timeout'}. Quick scan result shown above.
           <button id="retry-full-btn" style="margin-left:8px;padding:2px 8px;font-size:11px;cursor:pointer">Retry</button>
         </div>`;
         document.getElementById('retry-full-btn')?.addEventListener('click', runFullAnalysis);
@@ -197,56 +228,100 @@ function renderThreats(result) {
 
 // ── Attachments ────────────────────────────────────────────────────────────────
 function renderAttachments(result) {
-  // Check for VT data in model_breakdown or virustotal field
-  const vt = result.virustotal;
   const attCard = $('attachments-card');
   const attList = $('attachments-list');
 
-  if (!vt && !result.attachment_analysis?.results?.length) {
-    attCard.classList.add('hidden');
-    return;
-  }
+  // Priority 1: full Gmail API + VT results
+  const gmailAtts = result.attachment_analysis?.results || [];
+  // Priority 2: legacy VT blob (single file upload from dashboard)
+  const legacyVt = result.virustotal;
+  // Priority 3: names-only from DOM extraction
+  const attSummary = result.attachment_summary;
+
+  const hasData = gmailAtts.length > 0 || legacyVt || (attSummary?.total > 0);
+  if (!hasData) { attCard.classList.add('hidden'); return; }
 
   attCard.classList.remove('hidden');
 
-  if (vt?.available) {
-    const riskColor = vt.risk_level === 'CRITICAL' ? '#b91c1c'
-      : vt.risk_level === 'HIGH' ? '#ef4444'
-      : vt.risk_level === 'MEDIUM' ? '#f59e0b' : '#22c55e';
+  // ── Priority 1: Per-file Gmail API + VT results ───────────────────────────
+  if (gmailAtts.length > 0) {
+    attList.innerHTML = gmailAtts.map(a => {
+      const vt = a.virustotal || {};
+      const riskColors = { CRITICAL: '#b91c1c', HIGH: '#ef4444', MEDIUM: '#f59e0b', LOW: '#22c55e', UNKNOWN: '#6b7280' };
+      const color = riskColors[a.risk_level] || riskColors.UNKNOWN;
+      const vtBadge = vt.available
+        ? `<a href="${vt.permalink}" target="_blank"
+             style="font-size:11px;font-weight:700;color:${color};border:1px solid ${color}44;
+                    padding:2px 6px;border-radius:4px;text-decoration:none">
+             VT: ${vt.detection_ratio}
+           </a>`
+        : `<span style="font-size:11px;color:#6b7280;border:1px solid #33333344;padding:2px 6px;border-radius:4px">
+             ${vt.reason === 'no_api_key' ? 'VT: no key' : vt.reason === 'timeout' ? 'VT: timeout' : 'VT: pending'}
+           </span>`;
 
+      const sizeKb = a.size_bytes > 0 ? `${(a.size_bytes / 1024).toFixed(0)} KB` : '';
+
+      return `
+        <div class="att-item">
+          <div class="att-header">
+            <div class="att-name">📎 ${a.filename} <span style="color:#6b7280;font-size:11px">${sizeKb}</span></div>
+            ${vtBadge}
+          </div>
+          ${vt.malware_families?.length ? `<div class="att-families">🦠 ${vt.malware_families.join(', ')}</div>` : ''}
+          ${vt.malicious_engines?.length ? `
+            <div class="att-engines">
+              <div class="att-engines-label">Detected by:</div>
+              <div class="att-engines-list">${vt.malicious_engines.slice(0, 6).join(', ')}</div>
+            </div>` : ''}
+          <div class="att-findings">
+            ${(a.findings || []).slice(0, 3).map(f => `<div class="att-finding">⚠ ${f}</div>`).join('')}
+          </div>
+          ${vt.permalink ? `<a href="${vt.permalink}" target="_blank" class="btn btn--ghost btn--sm" style="margin-top:6px">🔗 View on VirusTotal</a>` : ''}
+        </div>`;
+    }).join('');
+    return;
+  }
+
+  // ── Priority 2: legacy single-file VT (dashboard upload) ─────────────────
+  if (legacyVt?.available) {
+    const color = legacyVt.risk_level === 'CRITICAL' ? '#b91c1c'
+      : legacyVt.risk_level === 'HIGH' ? '#ef4444'
+        : legacyVt.risk_level === 'MEDIUM' ? '#f59e0b' : '#22c55e';
     attList.innerHTML = `
       <div class="att-item">
         <div class="att-header">
           <div class="att-name">📎 Attachment</div>
-          <a href="${vt.permalink}" target="_blank" class="att-vt-badge" style="border-color:${riskColor}44;color:${riskColor}">
-            VT: ${vt.detection_ratio}
+          <a href="${legacyVt.permalink}" target="_blank" class="att-vt-badge" style="border-color:${color}44;color:${color}">
+            VT: ${legacyVt.detection_ratio}
           </a>
         </div>
-        ${vt.malware_families?.length ? `
-          <div class="att-families">
-            🦠 ${vt.malware_families.join(', ')}
-          </div>` : ''}
-        ${vt.malicious_engines?.length ? `
+        ${legacyVt.malware_families?.length ? `<div class="att-families">🦠 ${legacyVt.malware_families.join(', ')}</div>` : ''}
+        ${legacyVt.malicious_engines?.length ? `
           <div class="att-engines">
             <div class="att-engines-label">Detected by:</div>
-            <div class="att-engines-list">${vt.malicious_engines.slice(0,6).join(', ')}</div>
+            <div class="att-engines-list">${legacyVt.malicious_engines.slice(0, 6).join(', ')}</div>
           </div>` : ''}
-        <a href="${vt.permalink}" target="_blank" class="btn btn--ghost btn--sm" style="margin-top:8px">
-          🔗 View on VirusTotal
-        </a>
+        <a href="${legacyVt.permalink}" target="_blank" class="btn btn--ghost btn--sm" style="margin-top:8px">🔗 View on VirusTotal</a>
       </div>`;
-  } else {
-    const atts = result.attachment_analysis?.results || [];
-    attList.innerHTML = atts.map(a => `
-      <div class="att-item">
-        <div class="att-header">
-          <div class="att-name">📎 ${a.filename}</div>
-          <span class="att-risk att-risk--${a.risk_level?.toLowerCase()}">${a.risk_level}</span>
-        </div>
-        <div class="att-findings">
-          ${(a.findings || []).slice(0,3).map(f => `<div class="att-finding">⚠ ${f}</div>`).join('')}
-        </div>
-      </div>`).join('');
+    return;
+  }
+
+  // ── Priority 3: names only (email not open / OAuth not connected) ─────────
+  if (attSummary?.total > 0) {
+    attList.innerHTML = attSummary.names.map(name => {
+      const isRisky = attSummary.risky?.includes(name);
+      const color = isRisky ? '#ef4444' : '#6b7280';
+      const ext = name.split('.').pop().toUpperCase();
+      return `
+        <div class="att-item">
+          <div class="att-header">
+            <div class="att-name">📎 ${name}</div>
+            <span style="color:${color};font-size:11px;font-weight:600">${isRisky ? '⚠ RISKY EXT' : ext}</span>
+          </div>
+          ${isRisky ? `<div class="att-findings"><div class="att-finding">⚠ ${ext} can execute malicious code — verify before opening</div></div>` : ''}
+          <div style="font-size:11px;color:#6b7280;margin-top:4px">Connect Gmail OAuth for VirusTotal scan</div>
+        </div>`;
+    }).join('');
   }
 }
 
@@ -293,7 +368,7 @@ function renderUrlsFromMeta() {
   }
   // Render simplified without sandbox (quick mode)
   $('urls-list').innerHTML = urls.map(u =>
-    `<div class="url-item"><div class="url-text">${u.length > 60 ? u.slice(0,60)+'…' : u}</div></div>`
+    `<div class="url-item"><div class="url-text">${u.length > 60 ? u.slice(0, 60) + '…' : u}</div></div>`
   ).join('');
 }
 
@@ -301,7 +376,7 @@ function renderUrlsFromMeta() {
 async function runInlineSandbox(url, idx, withScreenshot) {
   const resultEl = $(`sandbox-inline-${idx}`);
   resultEl.classList.remove('hidden');
-  resultEl.innerHTML = `<div class="sandbox-loading">🔍 Sandboxing <span class="mono">${url.slice(0,40)}…</span></div>`;
+  resultEl.innerHTML = `<div class="sandbox-loading">🔍 Sandboxing <span class="mono">${url.slice(0, 40)}…</span></div>`;
 
   const resp = await sendMsg({ action: 'sandbox_url', url, deep: withScreenshot });
   if (!resp?.success) {
@@ -331,9 +406,9 @@ async function runInlineSandbox(url, idx, withScreenshot) {
       ${redirectHtml}
       <div class="sandbox-row">${sslIcon} — ${r.hostname}</div>
       ${r.page_info?.has_password_field ? `<div class="sandbox-row warning">⚠ Password field detected — credential harvesting form</div>` : ''}
-      ${(r.sandbox_flags || []).slice(0,3).map(f => `<div class="sandbox-flag">• ${f}</div>`).join('')}
+      ${(r.sandbox_flags || []).slice(0, 3).map(f => `<div class="sandbox-flag">• ${f}</div>`).join('')}
       ${r.screenshot_url ? `<img src="${r.screenshot_url}" class="sandbox-screenshot" alt="Page screenshot" />` : !withScreenshot ? `<div class="sandbox-hint">Click "📸 + Screenshot" for visual sandbox</div>` : '<div class="sandbox-loading">📸 Screenshot loading…</div>'}
-      <a href="http://localhost:3000/dashboard/sandbox?url=${encodeURIComponent(url)}" target="_blank" class="btn btn--ghost btn--sm" style="margin-top:8px">
+      <a href="http://localhost:3002/dashboard/sandbox?url=${encodeURIComponent(url)}" target="_blank" class="btn btn--ghost btn--sm" style="margin-top:8px">
         🔗 Open Full Sandbox Report
       </a>
     </div>`;
@@ -344,9 +419,9 @@ function renderActions(result) {
   const eventId = result.event_id || '';
   const meta = currentContext?.meta || {};
   if (eventId) {
-    $('btn-platform').href = `http://localhost:3000/dashboard/analyze?event_id=${eventId}`;
+    $('btn-platform').href = `http://localhost:3002/dashboard/analyze?event_id=${eventId}`;
     const chatQ = encodeURIComponent(`Analyze email event ${eventId}: "${meta.subject || ''}"`);
-    $('btn-chat').href = `http://localhost:3000/dashboard/chat?q=${chatQ}`;
+    $('btn-chat').href = `http://localhost:3002/dashboard/chat?q=${chatQ}`;
   }
 }
 

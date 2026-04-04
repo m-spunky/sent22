@@ -79,13 +79,13 @@ window.SentinelAPI = {
   },
 
   getPlatformUrl(eventId) {
-    return `http://localhost:3000/dashboard/analyze?event_id=${eventId}`;
+    return `http://localhost:3002/dashboard/analyze?event_id=${eventId}`;
   },
 
   getChatUrl(eventId, subject) {
     const prompt = encodeURIComponent(
       `Analyze the email with event ID ${eventId}: "${subject}"`
     );
-    return `http://localhost:3000/dashboard/chat?q=${prompt}`;
+    return `http://localhost:3002/dashboard/chat?q=${prompt}`;
   },
 };

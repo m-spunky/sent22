@@ -100,7 +100,7 @@ async function quickAnalyze({ subject, sender, snippet, gmailMessageId }) {
   return res.json();
 }
 
-async function fullAnalyze({ content, gmailMessageId, gmailSubject, gmailSender }) {
+async function fullAnalyze({ content, gmailMessageId, gmailSubject, gmailSender, attachmentNames }) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 28000); // 28s — backend hard caps at 25s
   try {
@@ -118,6 +118,8 @@ async function fullAnalyze({ content, gmailMessageId, gmailSubject, gmailSender 
           run_threat_intel: true,
           run_visual: false,
           llm_only: false,
+          attachment_names: attachmentNames || [],
+          has_attachments: (attachmentNames || []).length > 0,
         },
       }),
     });
@@ -134,26 +136,39 @@ async function fullAnalyze({ content, gmailMessageId, gmailSubject, gmailSender 
   }
 }
 
-// Tier 2 analysis: NLP + LLM only (no live URL/DNS/IOC). Targets ~1–2s.
+// Tier 2 analysis: NLP + LLM only (no live URL/DNS/IOC). Targets ~3–6s.
 async function llmAnalyze({ content, gmailMessageId, gmailSubject, gmailSender }) {
-  const res = await fetch(`${SENTINEL_API}/analyze/email`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content,
-      options: {
-        source: 'gmail_extension',
-        gmail_message_id: gmailMessageId,
-        gmail_subject: gmailSubject,
-        gmail_sender: gmailSender,
-        run_threat_intel: false,
-        run_visual: false,
-        llm_only: true,       // skips headers, URL live lookup, IOC feeds
-      },
-    }),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s — plenty for llm_only mode
+  try {
+    const res = await fetch(`${SENTINEL_API}/analyze/email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        content,
+        options: {
+          source: 'gmail_extension',
+          gmail_message_id: gmailMessageId,
+          gmail_subject: gmailSubject,
+          gmail_sender: gmailSender,
+          run_threat_intel: false,
+          run_visual: false,
+          llm_only: true,       // skips headers, URL live lookup, IOC feeds
+        },
+      }),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status}${errText ? ': ' + errText.slice(0, 120) : ''}`);
+    }
+    return res.json();
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('Analysis timed out (20s).');
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function sandboxUrl(url, deep = false) {
@@ -200,7 +215,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return;
         }
         // Serialize: only 1 full analysis runs at a time (protects BERT)
-        const result = await enqueueFullAnalysis(() => fullAnalyze(message));
+        const result = await enqueueFullAnalysis(() => fullAnalyze({
+          ...message,
+          attachmentNames: message.attachmentNames || [],
+        }));
         await cacheSet(message.gmailMessageId, { phase2: result });
         sendResponse({ success: true, result, cached: false });
       } catch (err) {
