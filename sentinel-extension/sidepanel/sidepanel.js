@@ -418,8 +418,14 @@ async function runInlineSandbox(url, idx, withScreenshot) {
 function renderActions(result) {
   const eventId = result.event_id || '';
   const meta = currentContext?.meta || {};
+  const msgId = currentContext?.msgId || '';
+  // Route to inbox page with the message pre-selected
+  if (msgId) {
+    $('btn-platform').href = `http://localhost:3002/dashboard/inbox?msgId=${msgId}`;
+  } else if (eventId) {
+    $('btn-platform').href = `http://localhost:3002/dashboard/inbox?msgId=${eventId}`;
+  }
   if (eventId) {
-    $('btn-platform').href = `http://localhost:3002/dashboard/analyze?event_id=${eventId}`;
     const chatQ = encodeURIComponent(`Analyze email event ${eventId}: "${meta.subject || ''}"`);
     $('btn-chat').href = `http://localhost:3002/dashboard/chat?q=${chatQ}`;
   }

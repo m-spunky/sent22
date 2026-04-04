@@ -186,6 +186,7 @@ export default function InboxPage() {
   const [filter, setFilter] = useState("ALL")
   const [connecting, setConnecting] = useState(false)
   const [connectedEmail, setConnectedEmail] = useState<string | null>(null)
+  const [autoSelectMsgId, setAutoSelectMsgId] = useState<string | null>(null)
 
   const checkStatus = useCallback(async () => {
     try {
@@ -218,13 +219,25 @@ export default function InboxPage() {
   }, [filter])
 
   useEffect(() => {
-    // Handle OAuth callback redirect (?connected=true)
+    // Handle OAuth callback redirect (?connected=true) and deep-link (?msgId=...)
     const params = new URLSearchParams(window.location.search)
     if (params.get("connected") === "true") {
       window.history.replaceState({}, "", window.location.pathname)
     }
+    const msgId = params.get("msgId")
+    if (msgId) setAutoSelectMsgId(msgId)
     checkStatus()
   }, [checkStatus])
+
+  // Auto-select email when deep-linked via ?msgId=
+  useEffect(() => {
+    if (!autoSelectMsgId || !data?.items?.length) return
+    const match = data.items.find(e => e.id === autoSelectMsgId)
+    if (match) {
+      setSelected(match)
+      setAutoSelectMsgId(null)
+    }
+  }, [autoSelectMsgId, data])
 
   useEffect(() => { if (connected) loadInbox() }, [connected, loadInbox, filter])
 

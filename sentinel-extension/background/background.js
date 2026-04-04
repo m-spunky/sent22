@@ -336,6 +336,46 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true, status: 'background_alive' });
     return false;
   }
+
+  // ── Safe sender list ─────────────────────────────────────────────────────
+  function _normalizeSender(raw) {
+    // Extract email from "Name <email>" or just "email"
+    const m = (raw || '').match(/<([^>]+)>/);
+    return (m ? m[1] : raw).toLowerCase().trim();
+  }
+
+  if (action === 'mark_safe') {
+    (async () => {
+      const { sentinel_safe_senders = [] } = await chrome.storage.local.get('sentinel_safe_senders');
+      const normalized = _normalizeSender(message.sender);
+      if (normalized && !sentinel_safe_senders.includes(normalized)) {
+        sentinel_safe_senders.push(normalized);
+        await chrome.storage.local.set({ sentinel_safe_senders });
+      }
+      sendResponse({ success: true, count: sentinel_safe_senders.length });
+    })();
+    return true;
+  }
+
+  if (action === 'check_safe') {
+    (async () => {
+      const { sentinel_safe_senders = [] } = await chrome.storage.local.get('sentinel_safe_senders');
+      const normalized = _normalizeSender(message.sender);
+      sendResponse({ success: true, isSafe: !!normalized && sentinel_safe_senders.includes(normalized) });
+    })();
+    return true;
+  }
+
+  if (action === 'unmark_safe') {
+    (async () => {
+      const { sentinel_safe_senders = [] } = await chrome.storage.local.get('sentinel_safe_senders');
+      const normalized = _normalizeSender(message.sender);
+      const updated = sentinel_safe_senders.filter(s => s !== normalized);
+      await chrome.storage.local.set({ sentinel_safe_senders: updated });
+      sendResponse({ success: true });
+    })();
+    return true;
+  }
 });
 
 // ── Startup + periodic purge ──────────────────────────────────────────────────

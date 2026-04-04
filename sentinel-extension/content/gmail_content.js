@@ -79,6 +79,9 @@
     if (isLoading) {
       badge.innerHTML = `<span class="sentinel-badge__dot sentinel-badge__dot--spin">◌</span>`;
       badge.title = 'SentinelAI: Scanning…';
+    } else if (result?._trusted) {
+      badge.innerHTML = `<span class="sentinel-badge__dot">✓</span>`;
+      badge.title = 'SentinelAI: Trusted sender — marked safe by you';
     } else {
       const tierDot = result?.analysis_tier === 'full' ? '★'
         : result?.analysis_tier === 'llm' ? '◆' : '●';
@@ -91,7 +94,7 @@
       openSidePanel(msgId, result, getRowMeta(rowEl));
     });
     badge.addEventListener('mouseenter', (e) => showTooltip(e, msgId, result, rowEl));
-    badge.addEventListener('mouseleave', hideTooltip);
+    badge.addEventListener('mouseleave', scheduleHideTooltip);
 
     // Insert before date cell — most reliable anchor in Gmail
     const dateEl = rowEl.querySelector('.xW.xY, .xW, .xY');
@@ -101,9 +104,58 @@
 
   // ── Tooltip ───────────────────────────────────────────────────────────────
   let tooltipEl = null;
+  let _tooltipHideTimer = null;
+
+  function scheduleHideTooltip() {
+    _tooltipHideTimer = setTimeout(hideTooltip, 200);
+  }
+
+  function _positionAndMount(el, triggerEl) {
+    document.body.appendChild(el);
+    el.addEventListener('mouseenter', () => clearTimeout(_tooltipHideTimer));
+    el.addEventListener('mouseleave', scheduleHideTooltip);
+    const rect = triggerEl.getBoundingClientRect();
+    el.style.top  = `${rect.bottom + window.scrollY + 6}px`;
+    el.style.left = `${Math.min(rect.left + window.scrollX, window.innerWidth - 320)}px`;
+  }
+
   function showTooltip(event, msgId, result, rowEl) {
+    clearTimeout(_tooltipHideTimer);
     hideTooltip();
     if (!result) return;
+
+    // ── Trusted sender tooltip ────────────────────────────────────────────
+    if (result._trusted) {
+      tooltipEl = document.createElement('div');
+      tooltipEl.className = 'sentinel-tooltip';
+      tooltipEl.innerHTML = `
+        <div class="sentinel-tooltip__header">
+          <span class="sentinel-tooltip__emoji">✅</span>
+          <span class="sentinel-tooltip__verdict" style="color:#22c55e">Trusted Sender</span>
+        </div>
+        <div class="sentinel-tooltip__tier">You marked this sender as safe</div>
+        <div class="sentinel-tooltip__actions">
+          <button class="sentinel-tooltip__btn sentinel-tooltip__btn--primary" id="tip-detail-${msgId}">📊 View Analysis</button>
+          <button class="sentinel-tooltip__btn sentinel-tooltip__btn--secondary" id="tip-untrust-${msgId}">✖ Remove Trust</button>
+        </div>`;
+      tooltipEl.querySelector(`#tip-detail-${msgId}`)?.addEventListener('click', () => {
+        openSidePanel(msgId, result, getRowMeta(rowEl));
+        hideTooltip();
+      });
+      tooltipEl.querySelector(`#tip-untrust-${msgId}`)?.addEventListener('click', async () => {
+        const m = getRowMeta(rowEl);
+        await sendMsg({ action: 'unmark_safe', sender: m.sender });
+        processedRows.delete(msgId);
+        const cacheResp = await sendMsg({ action: 'check_cached', gmailMessageId: msgId });
+        const cached = cacheResp?.result;
+        const prev = cached?.phase2 || cached?.llm_phase || cached?.phase1;
+        if (prev) injectBadge(rowEl, msgId, prev);
+        else processRow(rowEl);
+        hideTooltip();
+      });
+      _positionAndMount(tooltipEl, event.target);
+      return;
+    }
     const pct = scoreToPercent(result.score ?? result.threat_score ?? 0);
     const v = getVerdict(result.verdict ?? 'UNKNOWN');
     const flags = result.quick_flags || (result.detected_tactics || []).map(t => t.name).slice(0, 4) || [];
@@ -130,13 +182,17 @@
       openSidePanel(msgId, result, getRowMeta(rowEl));
       hideTooltip();
     });
-    document.body.appendChild(tooltipEl);
-    const rect = event.target.getBoundingClientRect();
-    tooltipEl.style.top = `${rect.bottom + window.scrollY + 6}px`;
-    tooltipEl.style.left = `${Math.min(rect.left + window.scrollX, window.innerWidth - 320)}px`;
+    tooltipEl.querySelector('.sentinel-tooltip__btn--secondary')?.addEventListener('click', async () => {
+      const m = getRowMeta(rowEl);
+      await sendMsg({ action: 'mark_safe', sender: m.sender });
+      injectBadge(rowEl, msgId, { score: 0, verdict: 'SAFE', _trusted: true });
+      hideTooltip();
+    });
+    _positionAndMount(tooltipEl, event.target);
   }
 
   function hideTooltip() {
+    clearTimeout(_tooltipHideTimer);
     if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
   }
   document.addEventListener('click', (e) => {
@@ -233,11 +289,18 @@
       if (result) { injectBadge(rowEl, msgId, result); return; }
     }
 
-    // STEP 2: Inject loading spinner
-    injectBadge(rowEl, msgId, null);
+    // STEP 2: Check safe sender list — skip analysis entirely if trusted
     const meta = getRowMeta(rowEl);
+    const safeResp = await sendMsg({ action: 'check_safe', sender: meta.sender });
+    if (safeResp?.isSafe) {
+      injectBadge(rowEl, msgId, { score: 0, verdict: 'SAFE', _trusted: true });
+      return;
+    }
 
-    // STEP 3: Quick heuristic (always, ~800ms)
+    // STEP 3: Inject loading spinner
+    injectBadge(rowEl, msgId, null);
+
+    // STEP 4: Quick heuristic (~800ms)
     const q1Resp = await sendMsg({
       action: 'quick_analyze',
       subject: meta.subject,
@@ -252,7 +315,7 @@
       injectBadge(rowEl, msgId, { ...q1Resp.result, analysis_tier: 'quick' });
     }
 
-    // STEP 4: Deep analysis tier selection
+    // STEP 5: Deep analysis tier selection
     const count = await getFullCount();
     if (count < FULL_LIMIT) {
       await incrementFullCount();
@@ -380,17 +443,24 @@
         </div>` : ''}
       </div>
       <div class="sentinel-banner__actions">
-        ${eventId
-        ? `<a href="http://localhost:3002/dashboard/analyze?event_id=${eventId}" target="_blank" class="sentinel-banner__btn sentinel-banner__btn--primary">📊 View Full Report</a>`
-        : `<button class="sentinel-banner__btn sentinel-banner__btn--primary" id="sentinel-banner-panel-${msgId}">📊 Detailed Analysis</button>`}
+        <a href="http://localhost:3002/dashboard/inbox?msgId=${msgId}" target="_blank" class="sentinel-banner__btn sentinel-banner__btn--primary">📊 View Full Report</a>
         ${eventId ? `<a href="http://localhost:3002/dashboard/chat?q=${encodeURIComponent(`Analyze email event ${eventId}`)}" target="_blank" class="sentinel-banner__btn sentinel-banner__btn--secondary">💬 Sentinel Chat</a>` : ''}
         <button class="sentinel-banner__btn sentinel-banner__btn--ghost">🚩 Report</button>
         <button class="sentinel-banner__btn sentinel-banner__btn--ghost sentinel-banner__close-btn">✅ Mark Safe</button>
       </div>`;
 
     banner.querySelector('.sentinel-banner__close')?.addEventListener('click', () => banner.remove());
-    banner.querySelector('.sentinel-banner__close-btn')?.addEventListener('click', () => banner.remove());
-    banner.querySelector(`#sentinel-banner-panel-${msgId}`)?.addEventListener('click', () => openSidePanel(msgId, result, {}));
+    banner.querySelector('.sentinel-banner__close-btn')?.addEventListener('click', async () => {
+      const rowForMsg = findRowByMsgId(msgId);
+      if (rowForMsg) {
+        const m = getRowMeta(rowForMsg);
+        if (m.sender) {
+          await sendMsg({ action: 'mark_safe', sender: m.sender });
+          injectBadge(rowForMsg, msgId, { score: 0, verdict: 'SAFE', _trusted: true });
+        }
+      }
+      banner.remove();
+    });
     bodyEl.parentElement?.insertBefore(banner, bodyEl);
     bannerInjected = true;
   }

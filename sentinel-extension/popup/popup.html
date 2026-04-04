@@ -106,6 +106,47 @@
       color: #ef4444;
     }
 
+    /* Platform badge chips */
+    .platform-chips {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid #252d3d;
+      background: #161b27;
+      color: #4b5563;
+      cursor: default;
+      transition: all 0.15s;
+    }
+
+    .chip--active-gmail {
+      background: #1a2f4a;
+      border-color: #3b82f688;
+      color: #60a5fa;
+    }
+
+    .chip--active-outlook {
+      background: #1a2040;
+      border-color: #818cf888;
+      color: #a5b4fc;
+    }
+
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
     .stat-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -179,11 +220,20 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 2px 0;
     }
 
     .toggle-label {
       font-size: 12px;
       color: #8892a4;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toggle-label-icon {
+      font-size: 13px;
+      opacity: 0.7;
     }
 
     .toggle {
@@ -229,6 +279,12 @@
     input:checked+.toggle-slider::before {
       transform: translateX(16px);
     }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #1e2434;
+      margin: 8px 0;
+    }
   </style>
 </head>
 
@@ -237,20 +293,24 @@
     <div class="logo">S</div>
     <div class="brand">
       <div class="brand-name">SentinelAI</div>
-      <div class="brand-sub">Phishing Guard for Gmail</div>
+      <div class="brand-sub" id="brand-sub">Phishing Guard</div>
     </div>
     <div class="status-dot" id="status-dot"></div>
   </div>
 
   <div class="section">
-    <div class="section-title">Backend Status</div>
+    <div class="section-title">Status</div>
     <div class="status-row">
       <span>Sentinel API</span>
       <span class="status-val" id="api-status">Checking…</span>
     </div>
-    <div class="status-row" style="margin-top:6px">
-      <span>Active on</span>
-      <span class="status-val">Gmail.com</span>
+    <div class="platform-chips">
+      <div class="chip" id="chip-gmail">
+        <div class="chip-dot"></div>Gmail
+      </div>
+      <div class="chip" id="chip-outlook">
+        <div class="chip-dot"></div>Outlook
+      </div>
     </div>
   </div>
 
@@ -275,14 +335,29 @@
   <div class="section">
     <div class="section-title">Settings</div>
     <div class="toggle-row">
-      <span class="toggle-label">Auto-scan inbox</span>
+      <span class="toggle-label">
+        <span class="toggle-label-icon">📧</span>Gmail scanning
+      </span>
       <label class="toggle">
-        <input type="checkbox" id="toggle-auto" checked />
+        <input type="checkbox" id="toggle-gmail" checked />
         <span class="toggle-slider"></span>
       </label>
     </div>
-    <div class="toggle-row" style="margin-top:10px">
-      <span class="toggle-label">Show banners on threats</span>
+    <hr class="divider" />
+    <div class="toggle-row">
+      <span class="toggle-label">
+        <span class="toggle-label-icon">📨</span>Outlook scanning
+      </span>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-outlook" checked />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <hr class="divider" />
+    <div class="toggle-row">
+      <span class="toggle-label">
+        <span class="toggle-label-icon">🚨</span>Show threat banners
+      </span>
       <label class="toggle">
         <input type="checkbox" id="toggle-banner" checked />
         <span class="toggle-slider"></span>
@@ -298,7 +373,7 @@
       💬 Sentinel Chat
     </a>
     <a href="http://localhost:3002/dashboard/history?source=gmail_extension" target="_blank" class="btn btn--secondary">
-      📋 Gmail Analysis History
+      📋 Analysis History
     </a>
     <button id="btn-clear-cache" class="btn btn--secondary" style="color:#ef4444;border-color:#7f1d1d">
       🗑 Reset Cached Scores
